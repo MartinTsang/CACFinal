@@ -37,12 +37,12 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
             let defaults = UserDefaults.standard
             //defaults.removeObject(forKey: "userPostList")
             let userPosts = defaults.object(forKey: "userPostList") as? [String]
-            //if userPosts != nil{
-                //for userPostsNum in userPosts!{
+            if userPosts != nil{
+                for userPostsNum in userPosts!{
             for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
                 let postNum = Postsdata.key
-                print(postNum + "=?" )//userPostsNum)
-                if(postNum == "4"/*userPostsNum*/){
+                print(postNum + userPostsNum)
+                if(postNum == userPostsNum){
                     let postObject = Postsdata.value as? [String: AnyObject]
                     let cardCategory = postObject?["Category"]
                     let cardTitle = postObject?["Title"]
@@ -66,8 +66,8 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
                     })
                     
                 }
-            //}
-            //}
+            }
+            }
             }
         })
         

@@ -140,6 +140,14 @@ class TopChartVC: UIViewController {
         }
          return nil
     }
+    
+    func getRandomColor() -> UIColor{
+        let randomRed:CGFloat = CGFloat(drand48())
+        let randomGreen:CGFloat = CGFloat(drand48())
+        let randomBlue:CGFloat = CGFloat(drand48())
+        return UIColor(red: randomRed, green: randomGreen, blue: randomBlue, alpha: 1.0)
+        
+    }
 
     func addNextCard(){
         
@@ -151,7 +159,7 @@ class TopChartVC: UIViewController {
         }
         currentCardNumber += 1
         cardView = SwipableCardView(frame: CardFrame())
-        cardView.card.backgroundColor = .brown
+        cardView.card.backgroundColor = getRandomColor()
         cardView.delegate = self
         view.addSubview(cardView)
         cardView.cardCategory.text = topPosts[currentCardNumber].category
@@ -184,7 +192,7 @@ class TopChartVC: UIViewController {
         addLikesTab()
         cardView.transform =  CGAffineTransform(scaleX: 3, y: 3)
         cardView.alpha = 0
-        cardView.card.backgroundColor = .brown
+        cardView.card.backgroundColor = getRandomColor()
         //print("previous\(currentCardNumber)")
         
     }

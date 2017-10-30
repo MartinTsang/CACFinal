@@ -159,7 +159,7 @@ class LikedVC: UIViewController {
         }
         currentCardNumber += 1
         cardView = SwipableCardView(frame: CardFrame())
-        cardView.card.backgroundColor = .brown
+        cardView.card.backgroundColor = getRandomColor()
         cardView.delegate = self
         view.addSubview(cardView)
         cardView.cardCategory.text = likedList[currentCardNumber].category
@@ -192,8 +192,15 @@ class LikedVC: UIViewController {
         addLikesTab()
         cardView.transform =  CGAffineTransform(scaleX: 3, y: 3)
         cardView.alpha = 0
-        cardView.card.backgroundColor = .brown//cardInfoList[currentCardNumber].cardColor
-        //print("previous\(currentCardNumber)")
+        cardView.card.backgroundColor = getRandomColor()
+        
+    }
+    
+    func getRandomColor() -> UIColor{
+        let randomRed:CGFloat = CGFloat(drand48())
+        let randomGreen:CGFloat = CGFloat(drand48())
+        let randomBlue:CGFloat = CGFloat(drand48())
+        return UIColor(red: randomRed, green: randomGreen, blue: randomBlue, alpha: 1.0)
         
     }
     
