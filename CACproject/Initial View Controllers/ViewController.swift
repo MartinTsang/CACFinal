@@ -107,6 +107,11 @@ class ViewController: UIViewController, GIDSignInUIDelegate {
                 }
                 print("User has successfully logged in!")
                 
+                let storyboard = UIStoryboard(name: "Main", bundle: nil)
+                let moveToIntermediate = storyboard.instantiateViewController(withIdentifier: "intermediate")
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                appDelegate.window?.rootViewController = moveToIntermediate
+                
                 /*
                 let storyboard = UIStoryboard(name: "Main", bundle: nil)
                 let moveToTabBar = storyboard.instantiateViewController(withIdentifier: "TabBarViewController")
