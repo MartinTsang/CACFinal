@@ -1,0 +1,6 @@
+framework module MaterialColorPicker {
+  umbrella header "MaterialColorPicker-umbrella.h"
+
+  export *
+  module * { export * }
+}
