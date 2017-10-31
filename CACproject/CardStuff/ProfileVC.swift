@@ -14,7 +14,7 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
     var categoryView: UICollectionView!
     var infoView = UIView()
     var name = UILabel()
-    var categories = ["1","12321","232","123124213123","1","12321","232","123124213123"]
+    var categories = ["Education","College","Architechure","Science","Economics","Physics","Hacks","Nutrition"]
     var profilePicture = UIView()
     var categoryTitle = UILabel()
     var postTitle = UILabel()
@@ -22,73 +22,146 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
     var myPostList = [CardsData]()
     var profileTitle = UILabel()
     var myPosts = UITableView()
+    var brushCenterX: CGFloat?
+    var brushCenterY: CGFloat?
+    var unbrushplace: CGFloat?
     var brush1 = UIView()
     var brush2 = UIView()
     var brush3 = UIView()
     var brush4 = UIView()
     var likesCountList = [Int]()
+    var myPostsAdded = false
+    var rainbow = RainbowColor()
+    var colorArray = [UIColor]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        NotificationCenter.default.addObserver(self, selector: #selector(CardsViewController.Unbrush), name:NSNotification.Name(rawValue: "NotificationID"), object: nil)
         
+        self.navigationController?.navigationBar.removeFromSuperview()
+        
+        let defaults = UserDefaults.standard
+        if let categoryList = defaults.object(forKey: "userCategoryList") as? [String]{
+            self.categories = categoryList
+        }
+        unbrushplace = self.view.frame.height*3/2
+        brushCenterX = view.center.x
+        brushCenterY = view.center.y
+        addBrushEffect(brush: brush1, x: 0, y: -view.bounds.height)
+        addBrushEffect(brush: brush2, x: view.bounds.width/4 ,y: view.bounds.height*2)
+        addBrushEffect(brush: brush3, x: view.bounds.width/2 ,y: -view.bounds.height)
+        addBrushEffect(brush: brush4, x: view.bounds.width*3/4 ,y: view.bounds.height*2)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(ProfileVC.Unbrush), name:NSNotification.Name(rawValue: "NotificationID"), object: nil)
+         NotificationCenter.default.addObserver(self, selector: #selector(ProfileVC.reference), name:NSNotification.Name(rawValue: "myNewPost"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ProfileVC.updateCategories), name:NSNotification.Name(rawValue: "userCategoryChanged"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ProfileVC.reference), name:NSNotification.Name(rawValue: "liked"), object: nil)
+        colorArray = rainbow.colorArray
         ref = Database.database().reference()
-        ref?.child("PostsData").observe(.value, with: {(snapshot) in
-            let defaults = UserDefaults.standard
-            //defaults.removeObject(forKey: "userPostList")
-            let userPosts = defaults.object(forKey: "userPostList") as? [String]
-            if userPosts != nil{
-                for userPostsNum in userPosts!{
-            for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
-                let postNum = Postsdata.key
-                print(postNum + userPostsNum)
-                if(postNum == userPostsNum){
-                    let postObject = Postsdata.value as? [String: AnyObject]
-                    let cardCategory = postObject?["Category"]
-                    let cardTitle = postObject?["Title"]
-                    let cardContent = postObject?["Content"]
-                    let post = CardsData(category: cardCategory as? String, title: cardTitle as? String, content: cardContent as? String, postNum: postNum)
-                    self.myPostList.append(post)
-                    
-                    self.ref?.child("Likes").observe(.value, with: {(snapshot) in
-                        for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
-                                    for postsNumber in Postsdata.children.allObjects as! [DataSnapshot]{
-                                        let postNum = postsNumber.key
-                                        if(postNum == "4"){
-                                            print("yes")
-                                            let likes = postsNumber.value as? Int
-                                            self.likesCountList.append(likes!)
-                                        }
-                                    }
-                                }
-                        
-                        self.addMyPosts()
-                    })
-                    
-                }
-            }
-            }
-            }
-        })
         
+        reference()
         // Do any additional setup after loading the view.
         addInfo()
         
         let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.itemSize = UICollectionViewFlowLayoutAutomaticSize
-        layout.sectionInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
-        layout.itemSize = CGSize(width: 90, height: view.frame.height/15 - 20)
-        
-        categoryView = UICollectionView(frame: CGRect(x: 0, y: view.frame.height/5 + view.frame.width/20 + view.frame.width/7, width: view.frame.width, height: view.frame.height/15), collectionViewLayout: layout)
-        categoryView.backgroundColor = .white
-        view.addSubview(categoryView)
-        categoryView.dataSource = self
-        categoryView.delegate = self
-        categoryView.register(selectedCategories.self, forCellWithReuseIdentifier: "categoryCell")
+        layout.sectionInset = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        layout.itemSize = CGSize(width: 180, height: view.frame.height/15 - 10)
+        addMyPosts()
         addCategoryTitle()
         addPostTitle()
-        addProfileTitle()
+        addNavBar()
+        categoryView = UICollectionView(frame: CGRect(x: 0, y: view.frame.height/5 + view.frame.width/20 + view.frame.height*0.1, width: view.frame.width, height: view.frame.height/15), collectionViewLayout: layout)
+        categoryView.backgroundColor = .white
+        view.addSubview(categoryView)
+        categoryView.register(selectedCategories.self, forCellWithReuseIdentifier: "categoryCell")
+        categoryView.dataSource = self
+        categoryView.delegate = self
+    }
+    
+    func addNavBar(){
+        let topBar = UIView(frame: CGRect(x: -2, y: -2, width: view.frame.width + 4, height: view.frame.height*0.1 + 2))
+        topBar.backgroundColor = UIColor.white
+        topBar.layer.borderWidth = 0.5
+        topBar.layer.borderColor = (UIColor.black).cgColor
+        view.addSubview(topBar)
+        
+        let navBarTitle = UILabel()
+        navBarTitle.text = "Profile"
+        topBar.addSubview(navBarTitle)
+        navBarTitle.backgroundColor = .clear
+        navBarTitle.textAlignment = .center
+        navBarTitle.font = UIFont.systemFont(ofSize: topBar.frame.height/4, weight: UIFont.Weight.semibold)
+        navBarTitle.translatesAutoresizingMaskIntoConstraints = false
+        let leftConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .left, relatedBy: .equal, toItem: topBar, attribute: .left, multiplier: 1, constant: view.frame.width/2-topBar.frame.height/2)
+        let rightConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .right, relatedBy: .equal, toItem: topBar, attribute: .right, multiplier: 1, constant: -view.frame.width/2+topBar.frame.height/2)
+        let topConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .top, relatedBy: .equal, toItem: topBar, attribute: .top, multiplier: 1, constant: topBar.frame.height/4+8)
+        let bottomConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .bottom, relatedBy: .equal, toItem: topBar, attribute: .bottom, multiplier: 1, constant: -topBar.frame.height/4+10)
+        topBar.addConstraints([leftConstraints,rightConstraints,topConstraints,bottomConstraints])
+    }
+    
+    @objc func updateCategories(){
+        let defaults = UserDefaults.standard
+        if let categoryList = defaults.object(forKey: "userCategoryList") as? [String]{
+            self.categories = categoryList
+        }
+        categoryView.reloadData()
+    }
+    
+    @objc func reference(){
+        ref?.child("PostsData").observe(.value, with: {(snapshot) in
+            let defaults = UserDefaults.standard
+            var PostColor: UIColor?
+            //defaults.removeObject(forKey: "userPostList")
+            //defaults.removeObject(forKey: "userPostList")
+            let userPosts = defaults.object(forKey: "userPostList") as? [String]
+            if userPosts != nil{
+                self.likesCountList.removeAll()
+                self.myPostList.removeAll()
+                for userPostsNum in userPosts!{
+                    for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
+                        let postNum = Postsdata.key
+                        print(postNum + userPostsNum)
+                        if(postNum == userPostsNum){
+                            let postObject = Postsdata.value as? [String: AnyObject]
+                            let cardCategory = postObject?["Category"]
+                            let cardTitle = postObject?["Title"]
+                            let cardContent = postObject?["Content"]
+                            let ColorData = Postsdata.childSnapshot(forPath: "Color")
+                                    if(ColorData.childrenCount > 0 && ColorData.key == "Color"){
+                                        let color = ColorData.value as? [String: CGFloat]
+                                        print(ColorData.key)
+                                        let red = color?["red"]
+                                        let green = color?["green"]
+                                        let blue = color?["blue"]
+                                        let alpha = color?["alpha"]
+                                        PostColor = UIColor(red: (red)!, green: (green)!, blue: (blue)!, alpha: (alpha)!)
+                                    }
+                                let post = CardsData(category: cardCategory as? String, title: cardTitle as? String, content: cardContent as? String, postNum: postNum, color: PostColor)
+                                self.myPostList.append(post)
+                                print(self.myPostList)
+                            
+                            
+                            
+                            self.ref?.child("Likes").observe(.value, with: {(snapshot) in
+                                for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
+                                    for postsNumber in Postsdata.children.allObjects as! [DataSnapshot]{
+                                        let postNum = postsNumber.key
+                                        if(postNum == userPostsNum){
+                                            print("yes")
+                                            let likes = postsNumber.value as? Int
+                                            self.likesCountList.append(likes!)
+                                        }
+                                    }
+                                }
+                                self.myPosts.reloadData()
+                            })
+                            
+                        }
+                    }
+                }
+            }
+        })
     }
     
     func addProfileTitle(){
@@ -100,7 +173,7 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
     }
     
     func addCategoryTitle(){
-        categoryTitle.frame = CGRect(x: 0, y: view.frame.height/5 + view.frame.width/7, width: view.frame.width, height: view.frame.width/20)
+        categoryTitle.frame = CGRect(x: 0, y: view.frame.height/5 + view.frame.height*0.1, width: view.frame.width, height: view.frame.width/20)
         categoryTitle.backgroundColor = UIColor(red:0.92, green:0.92, blue:0.92, alpha:1.0)
         categoryTitle.text = "  Your Categories"
         categoryTitle.font = UIFont.systemFont(ofSize: view.frame.width/30, weight: UIFont.Weight.bold)
@@ -108,7 +181,7 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
     }
     
     func addPostTitle(){
-        postTitle.frame = CGRect(x: 0, y: view.frame.height/5 + view.frame.width/20 + view.frame.height/15 + view.frame.width/7, width: view.frame.width, height: view.frame.width/20)
+        postTitle.frame = CGRect(x: 0, y: view.frame.height/5 + view.frame.width/20 + view.frame.height/15 + view.frame.height*0.1, width: view.frame.width, height: view.frame.width/20)
         postTitle.backgroundColor = UIColor(red:0.92, green:0.92, blue:0.92, alpha:1.0)
         postTitle.text = "  Your Posts"
         postTitle.font = UIFont.systemFont(ofSize: view.frame.width/30, weight: UIFont.Weight.bold)
@@ -117,7 +190,7 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
     
     
     func addInfo(){
-        infoView = UILabel(frame: CGRect(x: 0, y: view.frame.width/7, width:  view.frame.width, height:  view.frame.height/5))
+        infoView = UILabel(frame: CGRect(x: 0, y: view.frame.height*0.1, width:  view.frame.width, height:  view.frame.height/5))
         //infoView.backgroundColor = UIColor.lightGray
         view.addSubview(infoView)
         addName()
@@ -128,7 +201,7 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
         name = UILabel(frame: CGRect(x: infoView.frame.height*5/6, y: 0, width:  view.frame.width - infoView.frame.height, height:  view.frame.height/5))
         name.text = "Martin Zeng"
         name.textAlignment = .center
-        name.font = UIFont.systemFont(ofSize: view.frame.height*0.75/14, weight: UIFont.Weight.regular)
+        name.font = UIFont.systemFont(ofSize: view.frame.height*0.75/14, weight: UIFont.Weight.semibold)
         //name.backgroundColor = .brown
         infoView.addSubview(name)
     }
@@ -141,14 +214,6 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
         profilePicture.layer.borderColor = UIColor.lightGray.cgColor
         profilePicture.layer.cornerRadius = profilePicture.frame.height/2
         infoView.addSubview(profilePicture)
-    }
-    
-    func getRandomColor() -> UIColor{
-        let randomRed:CGFloat = CGFloat(drand48())
-        let randomGreen:CGFloat = CGFloat(drand48())
-        let randomBlue:CGFloat = CGFloat(drand48())
-        return UIColor(red: randomRed, green: randomGreen, blue: randomBlue, alpha: 1.0)
-        
     }
     
     override func didReceiveMemoryWarning() {
@@ -164,7 +229,7 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = categoryView.dequeueReusableCell(withReuseIdentifier: "categoryCell", for: indexPath) as! selectedCategories
         cell.category.text = categories[indexPath.item]
-        cell.category.backgroundColor = getRandomColor()
+        cell.category.backgroundColor = colorArray[indexPath.row]
         //cell.layer.cornerRadius = 30
         //cell.contentView.frame = c
         //cell.contentView.h = 50
@@ -214,12 +279,7 @@ extension ProfileVC: UITableViewDelegate, UITableViewDataSource{
     
     func expandInfo(color: UIColor, title: String, category: String, content: String) {
         let duration = 0.35
-        addBrushEffect(brush: brush1, x: 0, y: -view.frame.height, color: color)
-        addBrushEffect(brush: brush2, x: view.frame.width/4 ,y: view.frame.height*2, color: color)
-        addBrushEffect(brush: brush3, x: view.frame.width/2 ,y: -view.frame.height, color: color)
-        addBrushEffect(brush: brush4, x: view.frame.width*3/4 ,y: view.frame.height*2, color: color)
-        
-        animate(duration: Float(duration))
+        animate(duration: Float(duration), color: color)
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration*4), execute: {
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             let vc = storyboard.instantiateViewController(withIdentifier: "ExpandInfoVC") as! ExpandInfoVC
@@ -234,45 +294,57 @@ extension ProfileVC: UITableViewDelegate, UITableViewDataSource{
         
     }
     
-    func animate(duration: Float){
+    func animate(duration: Float, color: UIColor){
         brush1.alpha = 1
         brush2.alpha = 1
         brush3.alpha = 1
         brush4.alpha = 1
+        dipColor(brush: brush1, color: color)
+        dipColor(brush: brush2, color: color)
+        dipColor(brush: brush3, color: color)
+        dipColor(brush: brush4, color: color)
+        
         print(duration)
         UIView.animate(withDuration: TimeInterval(duration), animations: {
-            self.brush1.center = CGPoint(x: self.view.frame.width/8,y: self.view.frame.height/2)
+            self.brush1.center = CGPoint(x: self.view.frame.width/8,y: self.brushCenterY!)
+            //self.tabBarController?.tabBar.
         })
         
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration) - 0.2, execute: {
             UIView.animate(withDuration: TimeInterval(duration)+0.1, animations: {
-                self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.view.frame.height/2)
+                self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.brushCenterY!)
             })
         })
         
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration*2) - 0.14, execute: {
             UIView.animate(withDuration: TimeInterval(duration), animations: {
-                self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: self.view.frame.height/2)
+                self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: self.brushCenterY!)
             })
         })
         
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration*3) - 0.27, execute: {
             UIView.animate(withDuration: TimeInterval(duration+0.1), animations: {
-                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.view.frame.height/2)
+                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.brushCenterY!)
             })
         })
         
     }
     
-    func addBrushEffect(brush: UIView,x: CGFloat, y: CGFloat, color: UIColor){
-        brush.frame = CGRect(x: CGFloat(x), y: y, width: view.frame.width/4, height: view.frame.height)
-        brush.alpha = 0
+    func dipColor(brush: UIView, color: UIColor){
         brush.backgroundColor = color
-        view.addSubview(brush)
+        //brush.bringSubview(toFront: (self.tabBarController?.tabBar)!)
+    }
+    
+    func addBrushEffect(brush: UIView,x: CGFloat, y: CGFloat){
+        brush.frame = CGRect(x: CGFloat(x), y: y, width: view.frame.width/4, height: view.frame.height)
+        brush.alpha = 1
+        self.tabBarController?.view.addSubview(brush)
     }
 
     func addMyPosts(){
-        myPosts = UITableView(frame: CGRect(x: 0, y: view.frame.height/5 + view.frame.width/10 + view.frame.height/15 + view.frame.width/7, width: view.frame.width, height: view.frame.height/2))
+        
+        
+        myPosts = UITableView(frame: CGRect(x: 0, y: view.frame.height/5 + view.frame.width/20 + view.frame.height/15 + view.frame.height*0.1 + view.frame.width/20, width: view.frame.width, height: view.frame.height/2))
         view.addSubview(myPosts)
         myPosts.register(myPostsCell.self, forCellReuseIdentifier: "cell")
         myPosts.delegate = self
@@ -295,6 +367,7 @@ extension ProfileVC: UITableViewDelegate, UITableViewDataSource{
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! myPostsCell
         cell.view.frame = CGRect(x: view.frame.width*0.05, y: (cell.contentView.frame.height-view.frame.height/9)/2, width: view.frame.width*0.9, height: view.frame.height/9)
         cell.view.layer.cornerRadius = cell.view.frame.height/8
+        cell.addLikesTab()
         cell.selectionStyle = .default
         if(myPostList.count > 0){
         cell.view.text = "  " + myPostList[indexPath.row].title!
@@ -302,7 +375,7 @@ extension ProfileVC: UITableViewDelegate, UITableViewDataSource{
         if(likesCountList.count > 0){
             cell.likes.text = "Likes: \(likesCountList[indexPath.row])"
         }
-        let color = getRandomColor()
+        let color = myPostList[indexPath.row].color
         cell.tintColor = color
         cell.view.backgroundColor = color
         cell.view.textColor = .white
@@ -348,11 +421,10 @@ class myPostsCell: UITableViewCell {
         contentView.addSubview(view)
         view.clipsToBounds = true;
         view.textAlignment = NSTextAlignment.left
-        addLikesTab()
     }
     
     func addLikesTab(){
-        likesTab = UIView(frame: CGRect(x: view.frame.width - view.frame.width/4/1.2, y: view.frame.height + 5, width: view.frame.width/4, height: view.frame.height/2.5))
+        likesTab = UIView(frame: CGRect(x: view.frame.width - view.frame.width/4 - 5, y: view.frame.height - view.frame.height/4 - 5, width: view.frame.width/4, height: view.frame.height/4))
         likesTab.backgroundColor = .white
         likesTab.layer.cornerRadius =  contentView.frame.height/30
         view.addSubview(likesTab)
@@ -395,24 +467,24 @@ extension ProfileVC{
         //self.brush4.removeFromSuperview()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: {
             UIView.animate(withDuration: 0.5, animations: {
-                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.view.frame.height*3/2)
+                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.unbrushplace!)
             })
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                 UIView.animate(withDuration: 0.5, animations: {
-                    self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: -self.view.frame.height/2)
+                    self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: CGFloat(-Float(self.unbrushplace!)/3))
                 })
             })
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
                 UIView.animate(withDuration: 0.5, animations: {
-                    self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.view.frame.height*3/2)
+                    self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.unbrushplace!)
                 })
             })
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: {
                 UIView.animate(withDuration: 0.5, animations: {
-                    self.brush1.center = CGPoint(x: self.view.frame.width/8,y: -self.view.frame.height/2)
+                    self.brush1.center = CGPoint(x: self.view.frame.width/8,y: CGFloat(-Float(self.unbrushplace!)/3))
                 })
             })
         })

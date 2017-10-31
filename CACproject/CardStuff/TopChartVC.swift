@@ -19,7 +19,7 @@ class TopChartVC: UIViewController {
     var currentCardNumber:Int = -1
     
     struct Card {
-    var cardView = SwipableCardView()
+        var cardView: SwipableCardView?
     
     }
     
@@ -36,38 +36,114 @@ class TopChartVC: UIViewController {
     var cardNumberIndicator = UILabel()
     var indicatorNumber = 1
     var likesCountList = [Int]()
-    
+    var brushCenterX: CGFloat?
+    var brushCenterY: CGFloat?
+    var unbrushplace: CGFloat?
     var brush1 = UIView()
     var brush2 = UIView()
     var brush3 = UIView()
     var brush4 = UIView()
     
+    var firstFetch = true
     var ref: DatabaseReference?
-    
+    var indicatorAdded = false
     override func viewDidLoad() {
         
         super.viewDidLoad()
         NotificationCenter.default.addObserver(self, selector: #selector(TopChartVC.Unbrush), name:NSNotification.Name(rawValue: "NotificationID"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(TopChartVC.reference), name:NSNotification.Name(rawValue: "liked"), object: nil)
         addingUndoButton()
         
+        addNavBar()
+        unbrushplace = self.view.frame.height*3/2
+        brushCenterX = view.center.x
+        brushCenterY = view.center.y
+        addBrushEffect(brush: brush1, x: 0, y: -view.bounds.height)
+        addBrushEffect(brush: brush2, x: view.bounds.width/4 ,y: view.bounds.height*2)
+        addBrushEffect(brush: brush3, x: view.bounds.width/2 ,y: -view.bounds.height)
+        addBrushEffect(brush: brush4, x: view.bounds.width*3/4 ,y: view.bounds.height*2)
         
         ref = Database.database().reference()
+        reference()
+        // Do any additional setup after loading the view.
+    }
+    
+    func addNavBar(){
+        let topBar = UIView(frame: CGRect(x: -2, y: -2, width: view.frame.width + 4, height: view.frame.height*0.1 + 2))
+        topBar.backgroundColor = UIColor.white
+        topBar.layer.borderWidth = 0.5
+        topBar.layer.borderColor = (UIColor.black).cgColor
+        view.addSubview(topBar)
+        
+        let navBarTitle = UILabel()
+        navBarTitle.text = "Top Chart"
+        topBar.addSubview(navBarTitle)
+        navBarTitle.backgroundColor = .clear
+        navBarTitle.textAlignment = .center
+        navBarTitle.font = UIFont.systemFont(ofSize: topBar.frame.height/4, weight: UIFont.Weight.semibold)
+        navBarTitle.translatesAutoresizingMaskIntoConstraints = false
+        let leftConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .left, relatedBy: .equal, toItem: topBar, attribute: .left, multiplier: 1, constant: view.frame.width/2-topBar.frame.height/2)
+        let rightConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .right, relatedBy: .equal, toItem: topBar, attribute: .right, multiplier: 1, constant: -view.frame.width/2+topBar.frame.height/2)
+        let topConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .top, relatedBy: .equal, toItem: topBar, attribute: .top, multiplier: 1, constant: topBar.frame.height/4+8)
+        let bottomConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .bottom, relatedBy: .equal, toItem: topBar, attribute: .bottom, multiplier: 1, constant: -topBar.frame.height/4+10)
+        topBar.addConstraints([leftConstraints,rightConstraints,topConstraints,bottomConstraints])
+    }
+    
+    func initiateCards(){
+        if(self.frontCard == nil){
+            if let card = self.createCard(Undo: false){
+                self.frontCard = card
+                self.view.addSubview(self.frontCard!.cardView!)
+            }
+            
+            
+        }
+        
+        if(self.backCard == nil && topPosts.count > 1){
+            if let card = self.createCard(Undo: false){
+                print(card)
+                self.backCard = card
+                self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
+        }
+            
+        }else if  self.topPosts.count == 1 && firstFetch == false{
+            print("1 Card")
+            self.backCard = self.frontCard
+            self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
+        }
+        
+        
+        
+        if(self.indicatorAdded == false){
+            self.addCardNumberIndicator()
+            self.indicatorAdded = true
+        }else{
+            self.cardNumberIndicator.text = "\(self.indicatorNumber)/\(self.topPosts.count)"
+        }
+        
+        if(firstFetch == true){
+            firstFetch = false
+        }
+    }
+    
+    @objc func reference(){
         ref?.child("Likes").child(category).queryOrderedByValue()/*.queryLimited(toFirst: 1).queryLimited(toLast: 5)*/.observe(.value, with: {(snapshot) in
             //self.topPostsNum.removeAll()
+            self.topPosts.removeAll()
             if snapshot.childrenCount > 0{
-            var array = [String]()
-            for Postsdata in snapshot.children.allObjects as! [DataSnapshot] {
-                let key = Postsdata.key
-                array.append(key)
-            }
-            //let this =
-            
-            if array.count >= 50 {
-                self.topPostsNum = Array(array[0 ..< 50])
-            } else {
-                self.topPostsNum = array
-            }
-            self.topPostsNum?.reverse()
+                var array = [String]()
+                for Postsdata in snapshot.children.allObjects as! [DataSnapshot] {
+                    let key = Postsdata.key
+                    array.append(key)
+                }
+                //let this =
+                
+                if array.count >= 50 {
+                    self.topPostsNum = Array(array[0 ..< 50])
+                } else {
+                    self.topPostsNum = array
+                }
+                self.topPostsNum?.reverse()
                 
                 for postNum in self.topPostsNum!{
                     for Postsdata in snapshot.children.allObjects as! [DataSnapshot] {
@@ -77,47 +153,40 @@ class TopChartVC: UIViewController {
                         }
                     }
                 }
-            
-            self.ref?.child("PostsData").observe(.value, with: {(snapshot) in
-                if(snapshot.childrenCount > 0){
-                for num in self.topPostsNum!{
-                for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
-                    let postNum = Postsdata.key
-                    if(num == postNum){
-                        let postObject = Postsdata.value as? [String: AnyObject]
-                        let cardCategory = postObject?["Category"]
-                        let cardTitle = postObject?["Title"]
-                        let cardContent = postObject?["Content"]
-                        let post = CardsData(category: cardCategory as? String, title: cardTitle as? String, content: cardContent as? String, postNum: postNum)
-                        self.topPosts.append(post)
+                
+                self.ref?.child("PostsData").observe(.value, with: {(snapshot) in
+                    if(snapshot.childrenCount > 0){
+                        for num in self.topPostsNum!{
+                            var PostColor: UIColor?
+                            for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
+                                let postNum = Postsdata.key
+                                if(num == postNum){
+                                    let postObject = Postsdata.value as? [String: AnyObject]
+                                    let cardCategory = postObject?["Category"]
+                                    let cardTitle = postObject?["Title"]
+                                    let cardContent = postObject?["Content"]
+                                    let ColorData = Postsdata.childSnapshot(forPath: "Color")
+                                    if(ColorData.childrenCount > 0 && ColorData.key == "Color"){
+                                        let color = ColorData.value as? [String: CGFloat]
+                                        print(ColorData.key)
+                                        let red = color?["red"]
+                                        let green = color?["green"]
+                                        let blue = color?["blue"]
+                                        let alpha = color?["alpha"]
+                                        PostColor = UIColor(red: (red)!, green: (green)!, blue: (blue)!, alpha: (alpha)!)
+                                    }
+                                        let post = CardsData(category: cardCategory as? String, title: cardTitle as? String, content: cardContent as? String, postNum: postNum, color: PostColor)
+                                        self.topPosts.append(post)
+                                    
+                                }
+                            }
+                        }
                     }
-                    }
-                }
-                print(self.topPosts)
-                
-                
-                if let card = self.createCard(Undo: false){
-                    self.frontCard = card
-                    self.view.addSubview(self.frontCard!.cardView)
-                }
-                
-                if let card = self.createCard(Undo: false){
-                    self.backCard = card
-                    self.view.insertSubview(self.backCard!.cardView, belowSubview: self.frontCard!.cardView)
-                }
-                
-                if  self.topPosts.count == 1 {
-                    print("1 Card")
-                    self.backCard = self.frontCard
-                    self.view.insertSubview(self.backCard!.cardView, belowSubview: self.frontCard!.cardView)
-                }
                     
-                    self.addCardNumberIndicator()
-                }
-            })
+                    self.initiateCards()
+                })
             }
         })
-        // Do any additional setup after loading the view.
     }
     
     func createCard(Undo: Bool) -> Card?{
@@ -140,14 +209,6 @@ class TopChartVC: UIViewController {
         }
          return nil
     }
-    
-    func getRandomColor() -> UIColor{
-        let randomRed:CGFloat = CGFloat(drand48())
-        let randomGreen:CGFloat = CGFloat(drand48())
-        let randomBlue:CGFloat = CGFloat(drand48())
-        return UIColor(red: randomRed, green: randomGreen, blue: randomBlue, alpha: 1.0)
-        
-    }
 
     func addNextCard(){
         
@@ -159,7 +220,7 @@ class TopChartVC: UIViewController {
         }
         currentCardNumber += 1
         cardView = SwipableCardView(frame: CardFrame())
-        cardView.card.backgroundColor = getRandomColor()
+        cardView.card.backgroundColor = topPosts[currentCardNumber].color
         cardView.delegate = self
         view.addSubview(cardView)
         cardView.cardCategory.text = topPosts[currentCardNumber].category
@@ -175,7 +236,9 @@ class TopChartVC: UIViewController {
     func addPreviousCard(){
         
         //print("before2: \(currentCardNumber)")
+        
         currentCardNumber -= 1
+        
         if currentCardNumber == -1 {
             currentCardNumber = topPosts.count - 1
             indicatorNumber = topPosts.count
@@ -192,8 +255,7 @@ class TopChartVC: UIViewController {
         addLikesTab()
         cardView.transform =  CGAffineTransform(scaleX: 3, y: 3)
         cardView.alpha = 0
-        cardView.card.backgroundColor = getRandomColor()
-        //print("previous\(currentCardNumber)")
+        cardView.card.backgroundColor = topPosts[currentCardNumber].color
         
     }
     
@@ -249,9 +311,10 @@ class TopChartVC: UIViewController {
     }
     
     func addingUndoButton(){
-        UndoButton.frame = CGRect(x: view.frame.width/3 - view.frame.width/16/*view.frame.width/2 - view.frame.width/16*/, y: view.frame.height*0.8, width: view.frame.width/8, height: view.frame.width/8)
+        UndoButton.frame = CGRect(x: view.frame.width/2 - view.frame.width/16/*view.frame.width/2 - view.frame.width/16*/, y: view.frame.height*0.8, width: view.frame.width/8, height: view.frame.width/8)
         UndoButton.setTitle("", for: .normal)
         UndoButton.setTitleColor(UIColor.yellow,for: .normal)
+        UndoButton.center.x = self.view.center.x
         UndoButton.backgroundColor = UIColor.green
         UndoButton.layer.cornerRadius = UndoButton.frame.width/2
         UndoButton.addTarget(self, action: #selector(Undo(_:)), for: .touchUpInside)
@@ -262,6 +325,7 @@ class TopChartVC: UIViewController {
     {
         cardNumberIndicator = UILabel(frame: CGRect(x: view.frame.width/2 - view.frame.width/16/*view.frame.width/2 - view.frame.width/16*/, y: view.frame.height*0.8, width: view.frame.width/8, height: view.frame.width/8))
         cardNumberIndicator.text = "1/\(topPosts.count)"
+        cardNumberIndicator.center.x = self.view.center.x
         cardNumberIndicator.textColor = UIColor.lightGray
         cardNumberIndicator.textAlignment = .center
         view.addSubview(cardNumberIndicator)
@@ -270,40 +334,41 @@ class TopChartVC: UIViewController {
     @objc func Undo(_ sender: UIButton)
     {
         sender.pulsate()
-        if(topPosts.count > 0){
-        indicatorNumber -= 1
-        if(!undid){
-            if currentCardNumber == 0{
-                //print("beforeUndid:\(currentCardNumber)")
-                currentCardNumber = topPosts.count
-                
-               // print("afterUndid:\(currentCardNumber)")
+        print(currentCardNumber)
+        if (topPosts.count > 0) {
+            indicatorNumber -= 1
+            if(!undid){
+                if currentCardNumber == 0{
+                    //print("beforeUndid:\(currentCardNumber)")
+                    currentCardNumber = topPosts.count
+                    indicatorNumber = currentCardNumber
+                    // print("afterUndid:\(currentCardNumber)")
+                }
+                currentCardNumber -= 1
             }
-            currentCardNumber -= 1
-        }
-        cardNumberIndicator.text = "\(indicatorNumber)"
-        backCard = frontCard
-        if let card = self.createCard(Undo: true){
-            self.frontCard = card
-            self.view.addSubview(self.frontCard!.cardView)
-            undid = true
-        }
-        UIView.animate(withDuration: 0.5, animations:{
-            self.frontCard!.cardView.transform =  CGAffineTransform(scaleX: 1, y: 1)
-            self.frontCard!.cardView.alpha = 1
-        })
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+            cardNumberIndicator.text = "\(indicatorNumber)"
+            backCard = frontCard
+            if let card = self.createCard(Undo: true){
+                self.frontCard = card
+                self.view.addSubview(self.frontCard!.cardView!)
+                undid = true
+            }
             UIView.animate(withDuration: 0.5, animations:{
-                self.frontCard!.cardView.transform =  CGAffineTransform(scaleX: 1.2, y: 1.2)
-                self.frontCard!.cardView.alpha = 1
+                self.frontCard!.cardView?.transform =  CGAffineTransform(scaleX: 1, y: 1)
+                self.frontCard!.cardView?.alpha = 1
             })
-        })
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-            UIView.animate(withDuration: 0.5, animations:{
-                self.frontCard!.cardView.transform =  CGAffineTransform(scaleX: 1, y: 1)
-                self.frontCard!.cardView.alpha = 1
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+                UIView.animate(withDuration: 0.5, animations:{
+                    self.frontCard!.cardView?.transform =  CGAffineTransform(scaleX: 1.2, y: 1.2)
+                    self.frontCard!.cardView?.alpha = 1
+                })
             })
-        })
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+                UIView.animate(withDuration: 0.5, animations:{
+                    self.frontCard!.cardView?.transform =  CGAffineTransform(scaleX: 1, y: 1)
+                    self.frontCard!.cardView?.alpha = 1
+                })
+            })
         }
     }
     
@@ -325,7 +390,7 @@ class TopChartVC: UIViewController {
         
         if let card = self.createCard(Undo: false){
             self.backCard = card
-            self.view.insertSubview(self.backCard!.cardView, belowSubview: self.frontCard!.cardView)
+            self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
             
         }
     }
@@ -346,19 +411,15 @@ class TopChartVC: UIViewController {
 extension TopChartVC: SwipableCardViewDelegate {
     func expandInfo() {
         let duration = 0.5
-        addBrushEffect(brush: brush1, x: 0, y: -view.frame.height)
-        addBrushEffect(brush: brush2, x: view.frame.width/4 ,y: view.frame.height*2)
-        addBrushEffect(brush: brush3, x: view.frame.width/2 ,y: -view.frame.height)
-        addBrushEffect(brush: brush4, x: view.frame.width*3/4 ,y: view.frame.height*2)
-        
+
         animate(duration: Float(duration))
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration*4), execute: {
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             let vc = storyboard.instantiateViewController(withIdentifier: "ExpandInfoVC") as! ExpandInfoVC
-            vc.bgColor = self.frontCard?.cardView.card.backgroundColor
-            vc.titleText = self.frontCard?.cardView.cardTitle.text
-            vc.categoryText = self.frontCard?.cardView.cardCategory.text
-            vc.contentText = self.frontCard?.cardView.cardTexts.text
+            vc.bgColor = self.frontCard?.cardView!.card.backgroundColor
+            vc.titleText = self.frontCard?.cardView!.cardTitle.text
+            vc.categoryText = self.frontCard?.cardView!.cardCategory.text
+            vc.contentText = self.frontCard?.cardView!.cardTexts.text
             
             self.present(vc, animated: false, completion: nil)
             //self.brush4.removeFromSuperview()
@@ -371,42 +432,52 @@ extension TopChartVC: SwipableCardViewDelegate {
         brush2.alpha = 1
         brush3.alpha = 1
         brush4.alpha = 1
+        dipColor(brush: brush1)
+        dipColor(brush: brush2)
+        dipColor(brush: brush3)
+        dipColor(brush: brush4)
+        
         print(duration)
         UIView.animate(withDuration: TimeInterval(duration), animations: {
-            self.brush1.center = CGPoint(x: self.view.frame.width/8,y: self.view.frame.height/2)
+            self.brush1.center = CGPoint(x: self.view.frame.width/8,y: self.brushCenterY!)
+            //self.tabBarController?.tabBar.
         })
         
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration) - 0.2, execute: {
             UIView.animate(withDuration: TimeInterval(duration)+0.1, animations: {
-                self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.view.frame.height/2)
+                self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.brushCenterY!)
             })
         })
         
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration*2) - 0.14, execute: {
             UIView.animate(withDuration: TimeInterval(duration), animations: {
-                self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: self.view.frame.height/2)
+                self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: self.brushCenterY!)
             })
         })
         
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration*3) - 0.27, execute: {
             UIView.animate(withDuration: TimeInterval(duration+0.1), animations: {
-                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.view.frame.height/2)
+                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.brushCenterY!)
             })
         })
         
     }
     
+    func dipColor(brush: UIView){
+        brush.backgroundColor = frontCard?.cardView!.card.backgroundColor
+        //brush.bringSubview(toFront: (self.tabBarController?.tabBar)!)
+    }
+    
     func addBrushEffect(brush: UIView,x: CGFloat, y: CGFloat){
         brush.frame = CGRect(x: CGFloat(x), y: y, width: view.frame.width/4, height: view.frame.height)
-        brush.alpha = 0
-        brush.backgroundColor = frontCard?.cardView.card.backgroundColor
-        view.addSubview(brush)
+        brush.alpha = 1
+        self.tabBarController?.view.addSubview(brush)
     }
     
     
     func setBacKCardAlpha(alphaNum: Float) {
         if let backCard = backCard{
-            backCard.cardView.alpha = CGFloat(alphaNum)
+            backCard.cardView!.alpha = CGFloat(alphaNum)
         }
     }
     
@@ -434,24 +505,24 @@ extension TopChartVC{
         //self.brush4.removeFromSuperview()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: {
             UIView.animate(withDuration: 0.5, animations: {
-                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.view.frame.height*3/2)
+                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.unbrushplace!)
             })
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                 UIView.animate(withDuration: 0.5, animations: {
-                    self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: -self.view.frame.height/2)
+                    self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: CGFloat(-Float(self.unbrushplace!)/3))
                 })
             })
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
                 UIView.animate(withDuration: 0.5, animations: {
-                    self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.view.frame.height*3/2)
+                    self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.unbrushplace!)
                 })
             })
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: {
                 UIView.animate(withDuration: 0.5, animations: {
-                    self.brush1.center = CGPoint(x: self.view.frame.width/8,y: -self.view.frame.height/2)
+                    self.brush1.center = CGPoint(x: self.view.frame.width/8,y: CGFloat(-Float(self.unbrushplace!)/3))
                 })
             })
         })

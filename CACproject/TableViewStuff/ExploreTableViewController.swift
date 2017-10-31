@@ -75,68 +75,8 @@ class ExploreTableViewController: UIViewController, UITableViewDelegate, UITable
                                         Categories(name: "STEM 📚", description: "science tech engineering math"),
                                         Categories(name: "Weather ☔", description: "the future?")]
     
-    let colorArray: [UIColor] = [UIColor(red:0.85, green:0.30, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.85, green:0.38, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.85, green:0.46, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.85, green:0.54, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.85, green:0.62, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.85, green:0.70, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.85, green:0.78, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.85, green:0.85, blue:0.30, alpha:1.0),
-                                 
-                                 UIColor(red:0.80, green:0.85, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.72, green:0.85, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.64, green:0.85, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.54, green:0.85, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.48, green:0.85, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.40, green:0.85, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.32, green:0.85, blue:0.30, alpha:1.0),
-                                 UIColor(red:0.30, green:0.85, blue:0.30, alpha:1.0),
-                                 
-                                 UIColor(red:0.30, green:0.85, blue:0.35, alpha:1.0),
-                                 UIColor(red:0.30, green:0.85, blue:0.46, alpha:1.0),
-                                 UIColor(red:0.30, green:0.85, blue:0.58, alpha:1.0),
-                                 UIColor(red:0.30, green:0.85, blue:0.64, alpha:1.0),
-                                 UIColor(red:0.30, green:0.85, blue:0.70, alpha:1.0),
-                                 UIColor(red:0.30, green:0.85, blue:0.74, alpha:1.0),
-                                 UIColor(red:0.30, green:0.85, blue:0.82, alpha:1.0),
-                                 UIColor(red:0.30, green:0.85, blue:0.85, alpha:1.0),
-                                 
-                                 UIColor(red:0.30, green:0.85, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.30, green:0.74, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.30, green:0.70, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.30, green:0.64, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.30, green:0.57, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.30, green:0.49, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.30, green:0.40, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.30, green:0.30, blue:0.85, alpha:1.0),
-                                 
-                                 UIColor(red:0.37, green:0.85, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.44, green:0.74, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.52, green:0.70, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.60, green:0.64, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.68, green:0.57, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.76, green:0.49, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.84, green:0.40, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.85, green:0.30, blue:0.85, alpha:1.0),
-                                 
-                                 UIColor(red:0.37, green:0.85, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.44, green:0.74, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.52, green:0.70, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.60, green:0.64, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.68, green:0.57, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.76, green:0.49, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.84, green:0.40, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.85, green:0.30, blue:0.85, alpha:1.0),
-                                 
-                                 UIColor(red:0.37, green:0.85, blue:0.85, alpha:1.0),
-                                 UIColor(red:0.44, green:0.74, blue:0.73, alpha:1.0),
-                                 UIColor(red:0.52, green:0.70, blue:0.65, alpha:1.0),
-                                 UIColor(red:0.60, green:0.64, blue:0.59, alpha:1.0),
-                                 UIColor(red:0.68, green:0.57, blue:0.50, alpha:1.0),
-                                 UIColor(red:0.76, green:0.49, blue:0.43, alpha:1.0),
-                                 UIColor(red:0.84, green:0.40, blue:0.35, alpha:1.0),
-                                 UIColor(red:0.85, green:0.30, blue:0.30, alpha:1.0)]
+    let rainbow = RainbowColor()
+    var colorArray = [UIColor]()
     
     @IBOutlet weak var newCategoriesTableView: UITableView!
     @IBOutlet weak var footerView: footerViewClass!
@@ -151,8 +91,8 @@ class ExploreTableViewController: UIViewController, UITableViewDelegate, UITable
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        defaults2.set(userDefaultsCategoryShit2, forKey: "iLoveYou2")
+        colorArray = rainbow.colorArray
+        //defaults2.set(userDefaultsCategoryShit2, forKey: "iLoveYou2")
         
         newCategoriesTableView.dataSource = self
         newCategoriesTableView.delegate = self
@@ -200,9 +140,32 @@ class ExploreTableViewController: UIViewController, UITableViewDelegate, UITable
             label.font = UIFont.boldSystemFont(ofSize: 12)
             view.addConstraint(NSLayoutConstraint(item: label, attribute: .centerX, relatedBy: .equal, toItem: self.newCategoriesTableView, attribute: .centerX, multiplier: 1.0, constant: 0.0))
             view.addConstraint(NSLayoutConstraint(item: label, attribute: .centerY, relatedBy: .equal, toItem: self.newCategoriesTableView, attribute: .centerY, multiplier: 1.85, constant: 0.0))
+            
             //            label.center.x = view.center.x
             //            label.center.y = view.center.y - 100
             label.text = "\(categoryTitles[indexPath.row].name) has been added"
+            
+            
+            ////
+            let defaults = UserDefaults.standard
+            if let userCategoryList = defaults.object(forKey: "userCategoryList") as? [String]{
+                var existed = false
+                for category in userCategoryList{
+                    if categoryTitles[indexPath.row].name == category{
+                        existed = true
+                    }
+                }
+                if(!existed){
+                    var newUserCategoryList = userCategoryList
+                    newUserCategoryList.append(categoryTitles[indexPath.row].name)
+                    defaults.set(newUserCategoryList, forKey: "userCategoryList")
+                }
+            }else{
+                let newUserCategoryList = [categoryTitles[indexPath.row].name]
+                defaults.set(newUserCategoryList, forKey: "userCategoryList")
+            }
+            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "userCategoryChanged"), object: nil)
+            print(defaults.object(forKey: "userCategoryList")!)
             label.fadeIn()
             label.fadeOut()
         }
@@ -224,6 +187,20 @@ class ExploreTableViewController: UIViewController, UITableViewDelegate, UITable
                 //            label.center.x = view.center.x
                 //            label.center.y = view.center.y - 100
                 label2.text = "\(categoryTitles[indexPath.row].name) has been removed"
+                
+                ///
+                let defaults = UserDefaults.standard
+                if let userCategoryList = defaults.object(forKey: "userCategoryList") as? [String] {
+                    for category in userCategoryList{
+                        if category == categoryTitles[indexPath.row].name{
+                            var newUserCategoryList = userCategoryList
+                            newUserCategoryList.remove(e: categoryTitles[indexPath.row].name)
+                            defaults.set(newUserCategoryList, forKey: "userCategoryList")
+                        }
+                    }
+                }
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "userCategoryChanged"), object: nil)
+                print(defaults.object(forKey: "userCategoryList")!)
                 label2.fadeIn()
                 label2.fadeOut()
             }
@@ -260,7 +237,7 @@ class ExploreTableViewController: UIViewController, UITableViewDelegate, UITable
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = newCategoriesTableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.selectionStyle = .none
+        
         
         cell.backgroundColor = colorArray[indexPath.row]
         let entry: Categories
@@ -273,8 +250,8 @@ class ExploreTableViewController: UIViewController, UITableViewDelegate, UITable
         cell.textLabel?.text = entry.name
         cell.detailTextLabel?.text = entry.description
         
+        cell.selectionStyle = .none
         return cell
-        
     }
     
     // MARK: - Private instance methods
@@ -392,6 +369,15 @@ class customCell: UITableViewCell {
 }
 
 extension UIColor {
+    
+    var coreImageColor: CIColor {
+        return CIColor(color: self)
+    }
+    var components: (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) {
+        let coreImageColor = self.coreImageColor
+        return (coreImageColor.red, coreImageColor.green, coreImageColor.blue, coreImageColor.alpha)
+    }
+    
     public convenience init?(hexString: String) {
         let r, g, b, a: CGFloat
         
@@ -418,3 +404,71 @@ extension UIColor {
     }
 }
 
+class RainbowColor{
+    let colorArray: [UIColor] = [UIColor(red:0.85, green:0.30, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.85, green:0.38, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.85, green:0.46, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.85, green:0.54, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.85, green:0.62, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.85, green:0.70, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.85, green:0.78, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.85, green:0.85, blue:0.30, alpha:1.0),
+                                 
+                                 UIColor(red:0.80, green:0.85, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.72, green:0.85, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.64, green:0.85, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.54, green:0.85, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.48, green:0.85, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.40, green:0.85, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.32, green:0.85, blue:0.30, alpha:1.0),
+                                 UIColor(red:0.30, green:0.85, blue:0.30, alpha:1.0),
+                                 
+                                 UIColor(red:0.30, green:0.85, blue:0.35, alpha:1.0),
+                                 UIColor(red:0.30, green:0.85, blue:0.46, alpha:1.0),
+                                 UIColor(red:0.30, green:0.85, blue:0.58, alpha:1.0),
+                                 UIColor(red:0.30, green:0.85, blue:0.64, alpha:1.0),
+                                 UIColor(red:0.30, green:0.85, blue:0.70, alpha:1.0),
+                                 UIColor(red:0.30, green:0.85, blue:0.74, alpha:1.0),
+                                 UIColor(red:0.30, green:0.85, blue:0.82, alpha:1.0),
+                                 UIColor(red:0.30, green:0.85, blue:0.85, alpha:1.0),
+                                 
+                                 UIColor(red:0.30, green:0.85, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.30, green:0.74, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.30, green:0.70, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.30, green:0.64, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.30, green:0.57, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.30, green:0.49, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.30, green:0.40, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.30, green:0.30, blue:0.85, alpha:1.0),
+                                 
+                                 UIColor(red:0.37, green:0.85, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.44, green:0.74, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.52, green:0.70, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.60, green:0.64, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.68, green:0.57, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.76, green:0.49, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.84, green:0.40, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.85, green:0.30, blue:0.85, alpha:1.0),
+                                 
+                                 UIColor(red:0.37, green:0.85, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.44, green:0.74, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.52, green:0.70, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.60, green:0.64, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.68, green:0.57, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.76, green:0.49, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.84, green:0.40, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.85, green:0.30, blue:0.85, alpha:1.0),
+                                 
+                                 UIColor(red:0.37, green:0.85, blue:0.85, alpha:1.0),
+                                 UIColor(red:0.44, green:0.74, blue:0.73, alpha:1.0),
+                                 UIColor(red:0.52, green:0.70, blue:0.65, alpha:1.0),
+                                 UIColor(red:0.60, green:0.64, blue:0.59, alpha:1.0),
+                                 UIColor(red:0.68, green:0.57, blue:0.50, alpha:1.0),
+                                 UIColor(red:0.76, green:0.49, blue:0.43, alpha:1.0),
+                                 UIColor(red:0.84, green:0.40, blue:0.35, alpha:1.0),
+                                 UIColor(red:0.85, green:0.30, blue:0.30, alpha:1.0)]
+    
+    init(){
+        
+    }
+}

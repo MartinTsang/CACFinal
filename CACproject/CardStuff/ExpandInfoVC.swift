@@ -54,14 +54,14 @@ class ExpandInfoVC: UIViewController {
         view.addSubview(button)
         
         //
-        cardTitle = UILabel(frame: CGRect(x: view.frame.width*0.05, y: 0, width: view.frame.width*0.9, height: view.frame.height*0.1))
+        cardTitle = UILabel(frame: CGRect(x: view.frame.width*0.05, y: 5, width: view.frame.width*0.9, height: view.frame.height*0.1))
         cardTitle.text = titleText
         cardTitle.textColor = .white
         cardTitle.alpha = 0
         cardTitle.font =  UIFont.systemFont(ofSize: view.frame.width*0.07, weight: UIFont.Weight.bold)
         scroll.addSubview(cardTitle)
         
-        cardCategory = UILabel(frame: CGRect(x: view.frame.width - view.frame.width/3 - 10, y: 0, width: view.frame.width/3, height: view.frame.height*0.06))
+        cardCategory = UILabel(frame: CGRect(x: view.frame.width - view.frame.width/2 - 10, y: -5, width: view.frame.width/2, height: view.frame.height*0.06))
         cardCategory.text = categoryText
         cardCategory.textAlignment = .right
         cardCategory.textColor = .white
@@ -164,22 +164,4 @@ class ExpandInfoVC: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
-}
-
-extension UILabel {
-    
-    func animate(newText: String, characterDelay: TimeInterval) {
-        
-        DispatchQueue.main.async {
-            
-            self.text = ""
-            
-            for (index, character) in newText.characters.enumerated() {
-                DispatchQueue.main.asyncAfter(deadline: .now() + characterDelay * Double(index)) {
-                    self.text?.append(character)
-                }
-            }
-        }
-    }
-    
 }

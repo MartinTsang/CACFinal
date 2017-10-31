@@ -37,7 +37,8 @@ class AddingPostPopUpVC: UIViewController /*ChromaColorPickerDelegate*/{
     var changeColorButton = UIButton()
     var endEditingButton = UIButton()
     var card = UIView()
-    var currentColor:UIColor = UIColor.lightGray
+    var currentColorComponents = [String: Float]()
+    var currentColor = UIColor.lightGray
     var currentTitle:String = ""
     var currentContent:String = ""
     var currentCategory:String = ""
@@ -52,8 +53,6 @@ class AddingPostPopUpVC: UIViewController /*ChromaColorPickerDelegate*/{
     var numberOfLastPost: String?
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        
         
         ref = Database.database().reference()
         /*
@@ -249,19 +248,28 @@ class AddingPostPopUpVC: UIViewController /*ChromaColorPickerDelegate*/{
             let post = ["Title": currentTitle, "Category": currentCategory, "Content": currentContent]
             //let postRef = ref?.push()
             ref?.child("PostsData").child(key!).setValue(post)
+            ref?.child("PostsData").child(key!).child("Color").setValue(currentColorComponents)
             ref?.child("Likes").child(currentCategory).child(key!).setValue(0)
             
             ////user default
             let defaults = UserDefaults.standard
             if let userPostList = defaults.object(forKey: "userPostList") as? [String] {
-                var newUserPostList = userPostList
-                newUserPostList.append(key!)
-                defaults.set(newUserPostList, forKey: "userPostList")
+                var existed = false
+                for post in userPostList{
+                    if(post == key!){
+                        existed = true
+                    }
+                }
+                if !existed {
+                    var newUserPostList = userPostList
+                    newUserPostList.append(key!)
+                    defaults.set(newUserPostList, forKey: "userPostList")
+                }
             }else{
                 let userPostList = [key!]
                 defaults.set(userPostList, forKey: "userPostList")
             }
-            
+            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "myNewPost"), object: nil)
             
             dismiss(animated: true, completion: nil)
         }
@@ -289,6 +297,11 @@ extension AddingPostPopUpVC: MaterialColorPickerDelegate {
         card.backgroundColor = color
         changeColorButton.backgroundColor = color
         currentColor = color
+        let red = color.components.red
+        let blue = color.components.blue
+        let green = color.components.green
+        let alpha = color.components.alpha
+        currentColorComponents = ["red" : Float(red),"blue" : Float(blue), "green": Float(green), "alpha" : Float(alpha)]
     }
     
     func sizeForCellAtIndex(MaterialColorPickerView: MaterialColorPicker, index: Int)->CGSize{

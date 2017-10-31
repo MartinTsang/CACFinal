@@ -11,8 +11,6 @@ import Firebase
 
 class LikedVC: UIViewController {
     
-    var topPosts = [Int]()
-    
     var getCardList = SwipableCardView()
     
     //var cardInfoList = Array<(cardCategory: String, cardTitle: String, cardContent: String,  cardColor: UIColor)>()
@@ -20,7 +18,7 @@ class LikedVC: UIViewController {
     var currentCardNumber:Int = -1
     
     struct Card {
-        var cardView = SwipableCardView()
+        var cardView: SwipableCardView?
     }
     
     var undid: Bool = false
@@ -35,15 +33,19 @@ class LikedVC: UIViewController {
     var UndoButton = UIButton()
     var cardNumberIndicator = UILabel()
     var indicatorNumber = 1
+    var brushCenterX: CGFloat?
+    var brushCenterY: CGFloat?
+    var unbrushplace: CGFloat?
     var brush1 = UIView()
     var brush2 = UIView()
     var brush3 = UIView()
     var brush4 = UIView()
     
+    var firstFetch = true
     var ref: DatabaseReference?
     var likedList = [CardsData]()
     var likesCountlist = [Int]()
-    
+    var indicatorAdded = false
     override func viewDidLoad() {
         /*
         for i in 1...10{
@@ -63,68 +65,135 @@ class LikedVC: UIViewController {
         
         ref = Database.database().reference()
         
+        unbrushplace = self.view.frame.height*3/2
+        brushCenterX = view.center.x
+        brushCenterY = view.center.y
+        addBrushEffect(brush: brush1, x: 0, y: -view.bounds.height)
+        addBrushEffect(brush: brush2, x: view.bounds.width/4 ,y: view.bounds.height*2)
+        addBrushEffect(brush: brush3, x: view.bounds.width/2 ,y: -view.bounds.height)
+        addBrushEffect(brush: brush4, x: view.bounds.width*3/4 ,y: view.bounds.height*2)
         
-        
-        
-        ref?.child("PostsData").observeSingleEvent(of: .value, with: {(snapshot) in
-            if snapshot.childrenCount > 0{
-                let defaults = UserDefaults.standard
-                let userLiked = defaults.object(forKey: "userLikedList") as? [String]
-                if(userLiked != nil){
-                for liked in userLiked!{
-            for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
-                let postNum = Postsdata.key
-                if(postNum == liked){
-                    let postObject = Postsdata.value as? [String: AnyObject]
-                    let cardCategory = postObject?["Category"]
-                    let cardTitle = postObject?["Title"]
-                    let cardContent = postObject?["Content"]
-                    let post = CardsData(category: cardCategory as? String, title: cardTitle as? String, content: cardContent as? String, postNum: postNum)
-                    self.likedList.append(post)
-                }
-            }
-                    }}
-            
-            self.ref?.child("Likes").observe(.value, with: {(snapshot) in
-                for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
-                    if(userLiked != nil){
-                    for liked in userLiked!{
-                    for postsNumber in Postsdata.children.allObjects as! [DataSnapshot]{
-                    let postNum = postsNumber.key
-                    if(postNum == liked){
-                        let likes = postsNumber.value as? Int
-                        self.likesCountlist.append(likes!)
-                    }
-                    }
-                }
-                    }
-                }
-                
-                if let card = self.createCard(Undo: false){
-                    self.frontCard = card
-                    self.view.addSubview(self.frontCard!.cardView)
-                }
-                
-                if let card = self.createCard(Undo: false){
-                    self.backCard = card
-                    self.view.insertSubview(self.backCard!.cardView, belowSubview: self.frontCard!.cardView)
-                }
-                
-                if  self.likesCountlist.count == 1 {
-                    print("1 Card")
-                    self.backCard = self.frontCard
-                    self.view.insertSubview(self.backCard!.cardView, belowSubview: self.frontCard!.cardView)
-                }
-                
-                self.addCardNumberIndicator()
-            })
-            }
-        })
+        reference()
         
         NotificationCenter.default.addObserver(self, selector: #selector(LikedVC.Unbrush), name:NSNotification.Name(rawValue: "NotificationID"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(LikedVC.reference), name:NSNotification.Name(rawValue: "liked"), object: nil)
         addingUndoButton()
-        
+        addNavBar()
         // Do any additional setup after loading the view.
+    }
+    
+    @objc func reference(){
+        ref?.child("PostsData").observeSingleEvent(of: .value, with: {(snapshot) in
+            if snapshot.childrenCount > 0{
+                self.likedList.removeAll()
+                let defaults = UserDefaults.standard
+                //defaults.removeObject(forKey: "userLikedList")
+                var PostColor: UIColor?
+                let userLiked = defaults.object(forKey: "userLikedList") as? [String]
+                //print(userLiked)
+                if(userLiked != nil){
+                    for liked in userLiked!{
+                        for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
+                            let postNum = Postsdata.key
+                            if(postNum == liked){
+                                print(postNum)
+                                let postObject = Postsdata.value as? [String: AnyObject]
+                                let cardCategory = postObject?["Category"]
+                                let cardTitle = postObject?["Title"]
+                                let cardContent = postObject?["Content"]
+                                let ColorData = Postsdata.childSnapshot(forPath: "Color")
+                                if(ColorData.childrenCount > 0 && ColorData.key == "Color"){
+                                    let color = ColorData.value as? [String: CGFloat]
+                                    print(ColorData.key)
+                                    let red = color?["red"]
+                                    let green = color?["green"]
+                                    let blue = color?["blue"]
+                                    let alpha = color?["alpha"]
+                                    PostColor = UIColor(red: (red)!, green: (green)!, blue: (blue)!, alpha: (alpha)!)
+                                }
+                                    let post = CardsData(category: cardCategory as? String, title: cardTitle as? String, content: cardContent as? String, postNum: postNum, color: PostColor)
+                                    self.likedList.append(post)
+                                    
+                                    self.ref?.child("Likes").observe(.value, with: {(snapshot) in
+                                        self.likesCountlist.removeAll()
+                                        for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
+                                            if(userLiked != nil){
+                                                for liked in userLiked!{
+                                                    for postsNumber in Postsdata.children.allObjects as! [DataSnapshot]{
+                                                        let postNum = postsNumber.key
+                                                        if(postNum == liked){
+                                                            let likes = postsNumber.value as? Int
+                                                            self.likesCountlist.append(likes!)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        self.initiateCards()
+                                    })
+                                
+                            }
+                        }
+                    }}
+            }
+        })
+    }
+    
+    func addNavBar(){
+        let topBar = UIView(frame: CGRect(x: -2, y: -2, width: view.frame.width + 4, height: view.frame.height*0.1 + 2))
+        topBar.backgroundColor = UIColor.white
+        topBar.layer.borderWidth = 0.5
+        topBar.layer.borderColor = (UIColor.black).cgColor
+        view.addSubview(topBar)
+        
+        let navBarTitle = UILabel()
+        navBarTitle.text = "Liked"
+        topBar.addSubview(navBarTitle)
+        navBarTitle.backgroundColor = .clear
+        navBarTitle.textAlignment = .center
+        navBarTitle.font = UIFont.systemFont(ofSize: topBar.frame.height/4, weight: UIFont.Weight.semibold)
+        navBarTitle.translatesAutoresizingMaskIntoConstraints = false
+        let leftConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .left, relatedBy: .equal, toItem: topBar, attribute: .left, multiplier: 1, constant: view.frame.width/2-topBar.frame.height/3)
+        let rightConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .right, relatedBy: .equal, toItem: topBar, attribute: .right, multiplier: 1, constant: -view.frame.width/2+topBar.frame.height/3)
+        let topConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .top, relatedBy: .equal, toItem: topBar, attribute: .top, multiplier: 1, constant: topBar.frame.height/4+8)
+        let bottomConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .bottom, relatedBy: .equal, toItem: topBar, attribute: .bottom, multiplier: 1, constant: -topBar.frame.height/4+10)
+        topBar.addConstraints([leftConstraints,rightConstraints,topConstraints,bottomConstraints])
+    }
+    
+    func initiateCards(){
+        if(self.frontCard == nil){
+            if let card = self.createCard(Undo: false){
+                self.frontCard = card
+                self.view.addSubview(self.frontCard!.cardView!)
+            }
+        }
+        
+        if(self.backCard == nil && likedList.count > 1){
+            if let card = self.createCard(Undo: false){
+                //print(card)
+                self.backCard = card
+                self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
+            }
+            
+        }else if  self.likedList.count == 1 && firstFetch == false{
+            print("1 Card")
+            self.backCard = self.frontCard
+            self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
+        }
+        
+        
+        
+        if(self.indicatorAdded == false){
+            self.addCardNumberIndicator()
+            self.indicatorAdded = true
+        }else{
+            self.cardNumberIndicator.text = "\(self.indicatorNumber)/\(self.likedList.count)"
+        }
+        
+        if(firstFetch == true){
+            firstFetch = false
+        }
     }
     
     func createCard(Undo: Bool) -> Card?{
@@ -159,7 +228,7 @@ class LikedVC: UIViewController {
         }
         currentCardNumber += 1
         cardView = SwipableCardView(frame: CardFrame())
-        cardView.card.backgroundColor = getRandomColor()
+        cardView.card.backgroundColor = likedList[currentCardNumber].color
         cardView.delegate = self
         view.addSubview(cardView)
         cardView.cardCategory.text = likedList[currentCardNumber].category
@@ -192,15 +261,7 @@ class LikedVC: UIViewController {
         addLikesTab()
         cardView.transform =  CGAffineTransform(scaleX: 3, y: 3)
         cardView.alpha = 0
-        cardView.card.backgroundColor = getRandomColor()
-        
-    }
-    
-    func getRandomColor() -> UIColor{
-        let randomRed:CGFloat = CGFloat(drand48())
-        let randomGreen:CGFloat = CGFloat(drand48())
-        let randomBlue:CGFloat = CGFloat(drand48())
-        return UIColor(red: randomRed, green: randomGreen, blue: randomBlue, alpha: 1.0)
+        cardView.card.backgroundColor = likedList[currentCardNumber].color
         
     }
     
@@ -231,6 +292,8 @@ class LikedVC: UIViewController {
     private func addLikes(){
         likes = UILabel(frame: CGRect(x: 0, y: 0, width: cardView.frame.width*0.25, height: cardView.frame.height/15))
         if(likesCountlist.count > 0){
+            print(likedList)
+            print(currentCardNumber)
         likes.text = "likes: \(likesCountlist[currentCardNumber])"
         }
         likes.numberOfLines = 1
@@ -258,8 +321,9 @@ class LikedVC: UIViewController {
     }
     
     func addingUndoButton(){
-        UndoButton.frame = CGRect(x: view.frame.width/3 - view.frame.width/16/*view.frame.width/2 - view.frame.width/16*/, y: view.frame.height*0.8, width: view.frame.width/8, height: view.frame.width/8)
+        UndoButton = UIButton(frame: CGRect(x: view.frame.width/2 - view.frame.width/16/*view.frame.width/2 - view.frame.width/16*/, y: view.frame.height*0.8, width: view.frame.width/8, height: view.frame.width/8))
         UndoButton.setTitle("", for: .normal)
+        UndoButton.center.x = self.view.center.x
         UndoButton.setTitleColor(UIColor.yellow,for: .normal)
         UndoButton.backgroundColor = UIColor.green
         UndoButton.layer.cornerRadius = UndoButton.frame.width/2
@@ -270,6 +334,9 @@ class LikedVC: UIViewController {
     func addCardNumberIndicator()
     {
         cardNumberIndicator = UILabel(frame: CGRect(x: view.frame.width/2 - view.frame.width/16/*view.frame.width/2 - view.frame.width/16*/, y: view.frame.height*0.8, width: view.frame.width/8, height: view.frame.width/8))
+        cardNumberIndicator.backgroundColor = .clear
+        //cardNumberIndicator.sizeToFit()
+        cardNumberIndicator.center.x = self.view.center.x
         cardNumberIndicator.text = "1/\(likedList.count)"
         cardNumberIndicator.textColor = UIColor.lightGray
         cardNumberIndicator.textAlignment = .center
@@ -285,7 +352,7 @@ class LikedVC: UIViewController {
             if currentCardNumber == 0{
                 //print("beforeUndid:\(currentCardNumber)")
                 currentCardNumber = likedList.count
-                
+                indicatorNumber = currentCardNumber
                 // print("afterUndid:\(currentCardNumber)")
             }
             currentCardNumber -= 1
@@ -294,23 +361,23 @@ class LikedVC: UIViewController {
         backCard = frontCard
         if let card = self.createCard(Undo: true){
             self.frontCard = card
-            self.view.addSubview(self.frontCard!.cardView)
+            self.view.addSubview(self.frontCard!.cardView!)
             undid = true
         }
         UIView.animate(withDuration: 0.5, animations:{
-            self.frontCard!.cardView.transform =  CGAffineTransform(scaleX: 1, y: 1)
-            self.frontCard!.cardView.alpha = 1
+            self.frontCard!.cardView?.transform =  CGAffineTransform(scaleX: 1, y: 1)
+            self.frontCard!.cardView?.alpha = 1
         })
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
             UIView.animate(withDuration: 0.5, animations:{
-                self.frontCard!.cardView.transform =  CGAffineTransform(scaleX: 1.2, y: 1.2)
-                self.frontCard!.cardView.alpha = 1
+                self.frontCard!.cardView?.transform =  CGAffineTransform(scaleX: 1.2, y: 1.2)
+                self.frontCard!.cardView?.alpha = 1
             })
         })
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
             UIView.animate(withDuration: 0.5, animations:{
-                self.frontCard!.cardView.transform =  CGAffineTransform(scaleX: 1, y: 1)
-                self.frontCard!.cardView.alpha = 1
+                self.frontCard!.cardView?.transform =  CGAffineTransform(scaleX: 1, y: 1)
+                self.frontCard!.cardView?.alpha = 1
             })
         })
     }
@@ -318,7 +385,7 @@ class LikedVC: UIViewController {
     
     func switchCards(lastCard: Bool){
         
-        print(currentCardNumber)
+        //print(currentCardNumber)
         indicatorNumber += 1
         if indicatorNumber == likedList.count + 1{
             indicatorNumber = 1
@@ -328,13 +395,13 @@ class LikedVC: UIViewController {
         }
         
         cardNumberIndicator.text = "\(indicatorNumber)/\(likedList.count)"
-        if(!lastCard){
+        //if(!lastCard){
             frontCard = backCard
-        }
+        //}
         
         if let card = self.createCard(Undo: false){
             self.backCard = card
-            self.view.insertSubview(self.backCard!.cardView, belowSubview: self.frontCard!.cardView)
+            self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
             
         }
     }
@@ -355,19 +422,15 @@ class LikedVC: UIViewController {
 extension LikedVC: SwipableCardViewDelegate {
     func expandInfo() {
         let duration = 0.5
-        addBrushEffect(brush: brush1, x: 0, y: -view.frame.height)
-        addBrushEffect(brush: brush2, x: view.frame.width/4 ,y: view.frame.height*2)
-        addBrushEffect(brush: brush3, x: view.frame.width/2 ,y: -view.frame.height)
-        addBrushEffect(brush: brush4, x: view.frame.width*3/4 ,y: view.frame.height*2)
         
         animate(duration: Float(duration))
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration*4), execute: {
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             let vc = storyboard.instantiateViewController(withIdentifier: "ExpandInfoVC") as! ExpandInfoVC
-            vc.bgColor = self.frontCard?.cardView.card.backgroundColor
-            vc.titleText = self.frontCard?.cardView.cardTitle.text
-            vc.categoryText = self.frontCard?.cardView.cardCategory.text
-            vc.contentText = self.frontCard?.cardView.cardTexts.text
+            vc.bgColor = self.frontCard?.cardView?.card.backgroundColor
+            vc.titleText = self.frontCard?.cardView?.cardTitle.text
+            vc.categoryText = self.frontCard?.cardView?.cardCategory.text
+            vc.contentText = self.frontCard?.cardView?.cardTexts.text
             
             self.present(vc, animated: false, completion: nil)
             //self.brush4.removeFromSuperview()
@@ -380,41 +443,51 @@ extension LikedVC: SwipableCardViewDelegate {
         brush2.alpha = 1
         brush3.alpha = 1
         brush4.alpha = 1
-        print(duration)
+        dipColor(brush: brush1)
+        dipColor(brush: brush2)
+        dipColor(brush: brush3)
+        dipColor(brush: brush4)
+        
+        //print(duration)
         UIView.animate(withDuration: TimeInterval(duration), animations: {
-            self.brush1.center = CGPoint(x: self.view.frame.width/8,y: self.view.frame.height/2)
+            self.brush1.center = CGPoint(x: self.view.frame.width/8,y: self.brushCenterY!)
+            //self.tabBarController?.tabBar.
         })
         
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration) - 0.2, execute: {
             UIView.animate(withDuration: TimeInterval(duration)+0.1, animations: {
-                self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.view.frame.height/2)
+                self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.brushCenterY!)
             })
         })
         
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration*2) - 0.14, execute: {
             UIView.animate(withDuration: TimeInterval(duration), animations: {
-                self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: self.view.frame.height/2)
+                self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: self.brushCenterY!)
             })
         })
         
         DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(duration*3) - 0.27, execute: {
             UIView.animate(withDuration: TimeInterval(duration+0.1), animations: {
-                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.view.frame.height/2)
+                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.brushCenterY!)
             })
         })
         
     }
     
+    func dipColor(brush: UIView){
+        brush.backgroundColor = frontCard?.cardView?.card.backgroundColor
+        //brush.bringSubview(toFront: (self.tabBarController?.tabBar)!)
+    }
+    
     func addBrushEffect(brush: UIView,x: CGFloat, y: CGFloat){
         brush.frame = CGRect(x: CGFloat(x), y: y, width: view.frame.width/4, height: view.frame.height)
-        brush.alpha = 0
-        brush.backgroundColor = frontCard?.cardView.card.backgroundColor
-        view.addSubview(brush)
+        brush.alpha = 1
+        self.tabBarController?.view.addSubview(brush)
     }
     
     func setBacKCardAlpha(alphaNum: Float) {
         if let backCard = backCard{
-            backCard.cardView.alpha = CGFloat(alphaNum)
+            backCard.cardView?.alpha = CGFloat(alphaNum)
         }
     }
     
@@ -442,24 +515,24 @@ extension LikedVC{
         //self.brush4.removeFromSuperview()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: {
             UIView.animate(withDuration: 0.5, animations: {
-                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.view.frame.height*3/2)
+                self.brush4.center = CGPoint(x: self.view.frame.width*3/4 + self.view.frame.width/8 ,y: self.unbrushplace!)
             })
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                 UIView.animate(withDuration: 0.5, animations: {
-                    self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: -self.view.frame.height/2)
+                    self.brush3.center = CGPoint(x: self.view.frame.width/2 + self.view.frame.width/8,y: CGFloat(-Float(self.unbrushplace!)/3))
                 })
             })
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
                 UIView.animate(withDuration: 0.5, animations: {
-                    self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.view.frame.height*3/2)
+                    self.brush2.center = CGPoint(x: self.view.frame.width/4+self.view.frame.width/8,y: self.unbrushplace!)
                 })
             })
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: {
                 UIView.animate(withDuration: 0.5, animations: {
-                    self.brush1.center = CGPoint(x: self.view.frame.width/8,y: -self.view.frame.height/2)
+                    self.brush1.center = CGPoint(x: self.view.frame.width/8,y: CGFloat(-Float(self.unbrushplace!)/3))
                 })
             })
         })
