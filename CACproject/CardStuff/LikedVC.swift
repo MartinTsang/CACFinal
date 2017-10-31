@@ -325,7 +325,11 @@ class LikedVC: UIViewController {
         UndoButton.setTitle("", for: .normal)
         UndoButton.center.x = self.view.center.x
         UndoButton.setTitleColor(UIColor.yellow,for: .normal)
-        UndoButton.backgroundColor = UIColor.green
+        UndoButton.layer.borderWidth = 1
+        UndoButton.layer.borderColor = (UIColor.black).cgColor
+        UndoButton.backgroundColor = UIColor.black
+        UndoButton.tintColor = .white
+        UndoButton.setImage(#imageLiteral(resourceName: "redo"), for: .normal)
         UndoButton.layer.cornerRadius = UndoButton.frame.width/2
         UndoButton.addTarget(self, action: #selector(Undo(_:)), for: .touchUpInside)
         view.addSubview(UndoButton)

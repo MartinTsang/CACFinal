@@ -82,8 +82,8 @@ class TopChartVC: UIViewController {
         navBarTitle.textAlignment = .center
         navBarTitle.font = UIFont.systemFont(ofSize: topBar.frame.height/4, weight: UIFont.Weight.semibold)
         navBarTitle.translatesAutoresizingMaskIntoConstraints = false
-        let leftConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .left, relatedBy: .equal, toItem: topBar, attribute: .left, multiplier: 1, constant: view.frame.width/2-topBar.frame.height/2)
-        let rightConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .right, relatedBy: .equal, toItem: topBar, attribute: .right, multiplier: 1, constant: -view.frame.width/2+topBar.frame.height/2)
+        let leftConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .left, relatedBy: .equal, toItem: topBar, attribute: .left, multiplier: 1, constant: view.frame.width/2-topBar.frame.height/1)
+        let rightConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .right, relatedBy: .equal, toItem: topBar, attribute: .right, multiplier: 1, constant: -view.frame.width/2+topBar.frame.height/1)
         let topConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .top, relatedBy: .equal, toItem: topBar, attribute: .top, multiplier: 1, constant: topBar.frame.height/4+8)
         let bottomConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .bottom, relatedBy: .equal, toItem: topBar, attribute: .bottom, multiplier: 1, constant: -topBar.frame.height/4+10)
         topBar.addConstraints([leftConstraints,rightConstraints,topConstraints,bottomConstraints])
@@ -313,9 +313,13 @@ class TopChartVC: UIViewController {
     func addingUndoButton(){
         UndoButton.frame = CGRect(x: view.frame.width/2 - view.frame.width/16/*view.frame.width/2 - view.frame.width/16*/, y: view.frame.height*0.8, width: view.frame.width/8, height: view.frame.width/8)
         UndoButton.setTitle("", for: .normal)
-        UndoButton.setTitleColor(UIColor.yellow,for: .normal)
         UndoButton.center.x = self.view.center.x
-        UndoButton.backgroundColor = UIColor.green
+        UndoButton.setTitleColor(UIColor.yellow,for: .normal)
+        UndoButton.layer.borderWidth = 1
+        UndoButton.layer.borderColor = (UIColor.black).cgColor
+        UndoButton.backgroundColor = UIColor.black
+        UndoButton.tintColor = .white
+        UndoButton.setImage(#imageLiteral(resourceName: "redo"), for: .normal)
         UndoButton.layer.cornerRadius = UndoButton.frame.width/2
         UndoButton.addTarget(self, action: #selector(Undo(_:)), for: .touchUpInside)
         view.addSubview(UndoButton)
