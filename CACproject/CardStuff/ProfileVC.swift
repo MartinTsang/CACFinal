@@ -14,7 +14,7 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
     var categoryView: UICollectionView!
     var infoView = UIView()
     var name = UILabel()
-    var categories = ["Education","College","Architechure","Science","Economics","Physics","Hacks","Nutrition"]
+    var categories = [String]()
     var profilePicture = UIView()
     var categoryTitle = UILabel()
     var postTitle = UILabel()
@@ -31,7 +31,7 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
     var brush4 = UIView()
     var likesCountList = [Int]()
     var myPostsAdded = false
-    var rainbow = RainbowColor()
+    var rainbow = CategoryTitles()
     var colorArray = [UIColor]()
     
     override func viewDidLoad() {
@@ -112,8 +112,7 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
         ref?.child("PostsData").observe(.value, with: {(snapshot) in
             let defaults = UserDefaults.standard
             var PostColor: UIColor?
-            //defaults.removeObject(forKey: "userPostList")
-            //defaults.removeObject(forKey: "userPostList")
+            
             let userPosts = defaults.object(forKey: "userPostList") as? [String]
             if userPosts != nil{
                 self.likesCountList.removeAll()
@@ -148,7 +147,7 @@ class ProfileVC: UIViewController, UICollectionViewDelegate, UICollectionViewDat
                                     for postsNumber in Postsdata.children.allObjects as! [DataSnapshot]{
                                         let postNum = postsNumber.key
                                         if(postNum == userPostsNum){
-                                            print("yes")
+                                            //print("yes")
                                             let likes = postsNumber.value as? Int
                                             self.likesCountList.append(likes!)
                                         }

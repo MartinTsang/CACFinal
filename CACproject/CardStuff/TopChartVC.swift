@@ -51,7 +51,7 @@ class TopChartVC: UIViewController {
         
         super.viewDidLoad()
         NotificationCenter.default.addObserver(self, selector: #selector(TopChartVC.Unbrush), name:NSNotification.Name(rawValue: "NotificationID"), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(TopChartVC.reference), name:NSNotification.Name(rawValue: "liked"), object: nil)
+        //NotificationCenter.default.addObserver(self, selector: #selector(TopChartVC.reference), name:NSNotification.Name(rawValue: "liked"), object: nil)
         addingUndoButton()
         
         addNavBar()
@@ -76,17 +76,36 @@ class TopChartVC: UIViewController {
         view.addSubview(topBar)
         
         let navBarTitle = UILabel()
-        navBarTitle.text = "Top Chart"
+        navBarTitle.text = category
         topBar.addSubview(navBarTitle)
         navBarTitle.backgroundColor = .clear
         navBarTitle.textAlignment = .center
         navBarTitle.font = UIFont.systemFont(ofSize: topBar.frame.height/4, weight: UIFont.Weight.semibold)
         navBarTitle.translatesAutoresizingMaskIntoConstraints = false
-        let leftConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .left, relatedBy: .equal, toItem: topBar, attribute: .left, multiplier: 1, constant: view.frame.width/2-topBar.frame.height/1)
-        let rightConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .right, relatedBy: .equal, toItem: topBar, attribute: .right, multiplier: 1, constant: -view.frame.width/2+topBar.frame.height/1)
+        let leftConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .left, relatedBy: .equal, toItem: topBar, attribute: .left, multiplier: 1, constant: 0)
+        let rightConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .right, relatedBy: .equal, toItem: topBar, attribute: .right, multiplier: 1, constant: 0)
         let topConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .top, relatedBy: .equal, toItem: topBar, attribute: .top, multiplier: 1, constant: topBar.frame.height/4+8)
         let bottomConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .bottom, relatedBy: .equal, toItem: topBar, attribute: .bottom, multiplier: 1, constant: -topBar.frame.height/4+10)
         topBar.addConstraints([leftConstraints,rightConstraints,topConstraints,bottomConstraints])
+        
+        let dismissButton = UIButton()
+        dismissButton.setTitle("back", for: .normal)
+        dismissButton.setTitleColor(UIColor.black, for: .normal)
+        dismissButton.backgroundColor=UIColor.clear
+        topBar.addSubview(dismissButton)
+        dismissButton.translatesAutoresizingMaskIntoConstraints = false
+        let buttonLeft = NSLayoutConstraint(item: dismissButton, attribute: .left, relatedBy: .equal, toItem: topBar, attribute: .left, multiplier: 1, constant: 10)
+        let buttonRight = NSLayoutConstraint(item: dismissButton, attribute: .right, relatedBy: .equal, toItem: topBar, attribute: .right, multiplier: 1, constant: -view.frame.width-10 + topBar.frame.height)
+        let buttonTop = NSLayoutConstraint(item: dismissButton, attribute: .top, relatedBy: .equal, toItem: topBar, attribute: .top, multiplier: 1, constant: topBar.frame.height/4+8)
+        let buttonBot = NSLayoutConstraint(item: dismissButton, attribute: .bottom, relatedBy: .equal, toItem: topBar, attribute: .bottom, multiplier: 1, constant: -topBar.frame.height/4+5)
+        topBar.addConstraints([buttonBot,buttonTop,buttonLeft,buttonRight])
+        dismissButton.titleLabel?.font = UIFont.systemFont(ofSize: topBar.frame.height/4, weight: UIFont.Weight.thin)
+        dismissButton.addTarget(self, action: #selector(TopChartVC.dismissTopChart(_:)), for: .touchUpInside)
+    }
+    
+    @objc func dismissTopChart(_ sender: UIButton){
+        self.modalTransitionStyle = .crossDissolve
+        self.dismiss(animated: true, completion: nil)
     }
     
     func initiateCards(){
@@ -99,17 +118,21 @@ class TopChartVC: UIViewController {
             
         }
         
-        if(self.backCard == nil && topPosts.count > 1){
+        if(self.backCard == nil){
+            print("thy es nil \(self.topPosts.count)")
+            if topPosts.count > 1{
             if let card = self.createCard(Undo: false){
-                print(card)
+                print("multiple cards")
                 self.backCard = card
                 self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
-        }
+                }
+            }else if self.topPosts.count == 1 {//}&& firstFetch == false{
+                print("1 Card")
+                self.backCard = self.frontCard
+                print(backCard?.cardView?.card.backgroundColor?.components)
+                self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
+            }
             
-        }else if  self.topPosts.count == 1 && firstFetch == false{
-            print("1 Card")
-            self.backCard = self.frontCard
-            self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
         }
         
         
@@ -124,10 +147,12 @@ class TopChartVC: UIViewController {
         if(firstFetch == true){
             firstFetch = false
         }
+        
+        //(topPosts.count)
     }
     
     @objc func reference(){
-        ref?.child("Likes").child(category).queryOrderedByValue()/*.queryLimited(toFirst: 1).queryLimited(toLast: 5)*/.observe(.value, with: {(snapshot) in
+        ref?.child("Likes").child(category).queryOrderedByValue()/*.queryLimited(toFirst: 1).queryLimited(toLast: 5)*/.observeSingleEvent(of: .value, with: {(snapshot) in
             //self.topPostsNum.removeAll()
             self.topPosts.removeAll()
             if snapshot.childrenCount > 0{
@@ -150,17 +175,19 @@ class TopChartVC: UIViewController {
                         if(Postsdata.key == postNum){
                             let likes = Postsdata.value as? Int
                             self.likesCountList.append(likes!)
+                            
+                            
                         }
                     }
                 }
-                
-                self.ref?.child("PostsData").observe(.value, with: {(snapshot) in
+                self.ref?.child("PostsData").observeSingleEvent(of: .value, with: {(snapshot) in
                     if(snapshot.childrenCount > 0){
                         for num in self.topPostsNum!{
                             var PostColor: UIColor?
                             for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
                                 let postNum = Postsdata.key
                                 if(num == postNum){
+                                    print("num: \(num) =? postNum: \(postNum)")
                                     let postObject = Postsdata.value as? [String: AnyObject]
                                     let cardCategory = postObject?["Category"]
                                     let cardTitle = postObject?["Title"]
@@ -168,23 +195,22 @@ class TopChartVC: UIViewController {
                                     let ColorData = Postsdata.childSnapshot(forPath: "Color")
                                     if(ColorData.childrenCount > 0 && ColorData.key == "Color"){
                                         let color = ColorData.value as? [String: CGFloat]
-                                        print(ColorData.key)
+                                        //print(ColorData.key)
                                         let red = color?["red"]
                                         let green = color?["green"]
                                         let blue = color?["blue"]
                                         let alpha = color?["alpha"]
                                         PostColor = UIColor(red: (red)!, green: (green)!, blue: (blue)!, alpha: (alpha)!)
                                     }
-                                        let post = CardsData(category: cardCategory as? String, title: cardTitle as? String, content: cardContent as? String, postNum: postNum, color: PostColor)
-                                        self.topPosts.append(post)
-                                    
+                                    let post = CardsData(category: cardCategory as? String, title: cardTitle as? String, content: cardContent as? String, postNum: postNum, color: PostColor)
+                                    self.topPosts.append(post)
                                 }
                             }
                         }
                     }
-                    
                     self.initiateCards()
                 })
+                
             }
         })
     }
@@ -327,7 +353,7 @@ class TopChartVC: UIViewController {
     
     func addCardNumberIndicator()
     {
-        cardNumberIndicator = UILabel(frame: CGRect(x: view.frame.width/2 - view.frame.width/16/*view.frame.width/2 - view.frame.width/16*/, y: view.frame.height*0.8, width: view.frame.width/8, height: view.frame.width/8))
+        cardNumberIndicator = UILabel(frame: CGRect(x: view.frame.width/2 - view.frame.width/16/*view.frame.width/2 - view.frame.width/16*/, y: view.frame.height*0.9, width: view.frame.width/8, height: view.frame.width/8))
         cardNumberIndicator.text = "1/\(topPosts.count)"
         cardNumberIndicator.center.x = self.view.center.x
         cardNumberIndicator.textColor = UIColor.lightGray

@@ -12,71 +12,11 @@ import SimpleAlert
 class ExploreTableViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
 
-    let categoryTitles: [Categories] = [Categories(name: "Asian Studies 🍱", description: "Popular"),
-                                        Categories(name: "Mexico 🇲🇽", description: "all about politics"),
-                                        Categories(name: "Machine Learning 👁", description: "Popular"),
-                                        Categories(name: "LGBT 🌈", description: "Popular"),
-                                        Categories(name: "Architecture 🏔", description: "venture capital and startup culture"),
-                                        Categories(name: "Astronomy 👨🏻‍🚀", description: "Popular"),
-                                        Categories(name: "Biological Sciences 📚", description: "science tech engineering math"),
-                                        Categories(name: "Civil Studies 🗣", description: "current state of networking"),
-                                        Categories(name: "Economics 👨🏻‍🎓", description: "the future?"),
-                                        Categories(name: "English 📓", description: "Popular"),
-                                        Categories(name: "Human Development 👩🏻‍💻", description: ""),
-                                        Categories(name: "Italian 📲", description: "All about politics"),
-                                        Categories(name: "Linguistics 📞", description: "Popular"),
-                                        
-                                        
-                                        Categories(name: "Nutrition 👩🏻‍⚕️", description: "Popular"),
-                                        Categories(name: "Operations 👨🏻‍⚖️", description: "all about politics"),
-                                        Categories(name: "Philosophy 🌍", description: "the world as we know it"),
-                                        Categories(name: "Physics 🛳", description: "Popular"),
-                                        Categories(name: "Plant Science 👩🏼‍🔧", description: "engineering from all angles"),
-                                        Categories(name: "Statistics 📚", description: "science tech engineering math"),
-                                        Categories(name: "Animals 🙉", description: "current state of networking"),
-                                        Categories(name: "Urban 👨🏻‍🎓", description: "the future?"),
-                                        Categories(name: "Regional 🛩", description: "gadgets, reviews, and more"),
-                                        Categories(name: "Government 👩🏻‍💻", description: ""),
-                                        Categories(name: "Awards 🎖", description: "Popular"),
-                                        Categories(name: "Research 🔢", description: "Popular"),
-                                        
-                                        Categories(name: "Biotechnology 👩🏼‍🔬", description: "Popular"),
-                                        Categories(name: "Policy 👨🏻‍⚖️", description: "all about politics"),
-                                        Categories(name: "Humanities 🌍", description: "the world as we know it"),
-                                        Categories(name: "Startups 🤑", description: "venture capital and startup culture"),
-                                        Categories(name: "Engineering 👩🏼‍🔧", description: "Popular"),
-                                        Categories(name: "STEM 📚", description: "Popular"),
-                                        Categories(name: "Social Media 🙉", description: "Popular"),
-                                        Categories(name: "Education 👨🏻‍🎓", description: "Popular"),
-                                        Categories(name: "Tech 👩🏿‍💻", description: "gadgets, reviews, and more"),
-                                        Categories(name: "Web 👩🏻‍💻", description: ""),
-                                        Categories(name: "Applications 📲", description: "All about politics"),
-                                        Categories(name: "Sports 🏃🏻‍♀️", description: "All about politics"),
-                                                       
-                                                       
-                                        Categories(name: "iOS Development 📱", description: "Popular"),
-                                        Categories(name: "Music 🎵", description: "all about politics"),
-                                        Categories(name: "Culture 🌍", description: "the world as we know it"),
-                                        Categories(name: "Hot Button Topics ⛳", description: "venture capital and startup culture"),
-                                        Categories(name: "Friends 🎎", description: "engineering from all angles"),
-                                        Categories(name: "Communications 📚", description: "Popular"),
-                                        Categories(name: "Digital Studies 🙉", description: "current state of networking"),
-                                        Categories(name: "Homes 👨🏻‍🎓", description: "the future?"),
-                                        Categories(name: "Finance 👩🏿‍💻", description: "👁"),
-                                        Categories(name: "Coding 👩🏻‍💻", description: ""),
-                                        Categories(name: "Ethical Hacking 📲", description: "All about politics"),
-                                        Categories(name: "Healthcare 🏃🏻‍♀️", description: "All about politics"),
-                                                       
-                                        Categories(name: "Fitness 🎳", description: "Popular"),
-                                        Categories(name: "Fun Stuff 🏀", description: "all about politics"),
-                                        Categories(name: "Enology ☄", description: "the world as we know it"),
-                                        Categories(name: "Earth 🌍", description: "Popular"),
-                                        Categories(name: "Sociology 👩🏼‍🔧", description: "engineering from all angles"),
-                                        Categories(name: "STEM 📚", description: "science tech engineering math"),
-                                        Categories(name: "Weather ☔", description: "the future?")]
     
-    let rainbow = RainbowColor()
+    
+    let categorytitles = CategoryTitles()
     var colorArray = [UIColor]()
+    var categoryTitles = [Categories]()
     
     @IBOutlet weak var newCategoriesTableView: UITableView!
     @IBOutlet weak var footerView: footerViewClass!
@@ -91,7 +31,8 @@ class ExploreTableViewController: UIViewController, UITableViewDelegate, UITable
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        colorArray = rainbow.colorArray
+        colorArray = categorytitles.colorArray
+        categoryTitles = categorytitles.categoryTitles
         //defaults2.set(userDefaultsCategoryShit2, forKey: "iLoveYou2")
         
         newCategoriesTableView.dataSource = self
@@ -404,7 +345,70 @@ extension UIColor {
     }
 }
 
-class RainbowColor{
+class CategoryTitles{
+    let categoryTitles: [Categories] = [Categories(name: "Asian Studies 🍱", description: "Popular"),
+                                        Categories(name: "Mexico 🇲🇽", description: "all about politics"),
+                                        Categories(name: "Machine Learning 👁", description: "Popular"),
+                                        Categories(name: "LGBT 🌈", description: "Popular"),
+                                        Categories(name: "Architecture 🏔", description: "venture capital and startup culture"),
+                                        Categories(name: "Astronomy 👨🏻‍🚀", description: "Popular"),
+                                        Categories(name: "Biological Sciences 📚", description: "science tech engineering math"),
+                                        Categories(name: "Civil Studies 🗣", description: "current state of networking"),
+                                        Categories(name: "Economics 👨🏻‍🎓", description: "the future?"),
+                                        Categories(name: "English 📓", description: "Popular"),
+                                        Categories(name: "Human Development 👩🏻‍💻", description: ""),
+                                        Categories(name: "Italian 📲", description: "All about politics"),
+                                        Categories(name: "Linguistics 📞", description: "Popular"),
+                                        
+                                        
+                                        Categories(name: "Nutrition 👩🏻‍⚕️", description: "Popular"),
+                                        Categories(name: "Operations 👨🏻‍⚖️", description: "all about politics"),
+                                        Categories(name: "Philosophy 🌍", description: "the world as we know it"),
+                                        Categories(name: "Physics 🛳", description: "Popular"),
+                                        Categories(name: "Plant Science 👩🏼‍🔧", description: "engineering from all angles"),
+                                        Categories(name: "Statistics 📚", description: "science tech engineering math"),
+                                        Categories(name: "Animals 🙉", description: "current state of networking"),
+                                        Categories(name: "Urban 👨🏻‍🎓", description: "the future?"),
+                                        Categories(name: "Regional 🛩", description: "gadgets, reviews, and more"),
+                                        Categories(name: "Government 👩🏻‍💻", description: ""),
+                                        Categories(name: "Awards 🎖", description: "Popular"),
+                                        Categories(name: "Research 🔢", description: "Popular"),
+                                        
+                                        Categories(name: "Biotechnology 👩🏼‍🔬", description: "Popular"),
+                                        Categories(name: "Policy 👨🏻‍⚖️", description: "all about politics"),
+                                        Categories(name: "Humanities 🌍", description: "the world as we know it"),
+                                        Categories(name: "Startups 🤑", description: "venture capital and startup culture"),
+                                        Categories(name: "Engineering 👩🏼‍🔧", description: "Popular"),
+                                        Categories(name: "STEM 📚", description: "Popular"),
+                                        Categories(name: "Social Media 🙉", description: "Popular"),
+                                        Categories(name: "Education 👨🏻‍🎓", description: "Popular"),
+                                        Categories(name: "Tech 👩🏿‍💻", description: "gadgets, reviews, and more"),
+                                        Categories(name: "Web 👩🏻‍💻", description: ""),
+                                        Categories(name: "Applications 📲", description: "All about politics"),
+                                        Categories(name: "Sports 🏃🏻‍♀️", description: "All about politics"),
+                                        
+                                        
+                                        Categories(name: "iOS Development 📱", description: "Popular"),
+                                        Categories(name: "Music 🎵", description: "all about politics"),
+                                        Categories(name: "Culture 🌍", description: "the world as we know it"),
+                                        Categories(name: "Hot Button Topics ⛳", description: "venture capital and startup culture"),
+                                        Categories(name: "Friends 🎎", description: "engineering from all angles"),
+                                        Categories(name: "Communications 📚", description: "Popular"),
+                                        Categories(name: "Digital Studies 🙉", description: "current state of networking"),
+                                        Categories(name: "Homes 👨🏻‍🎓", description: "the future?"),
+                                        Categories(name: "Finance 👩🏿‍💻", description: "👁"),
+                                        Categories(name: "Coding 👩🏻‍💻", description: ""),
+                                        Categories(name: "Ethical Hacking 📲", description: "All about politics"),
+                                        Categories(name: "Healthcare 🏃🏻‍♀️", description: "All about politics"),
+                                        
+                                        Categories(name: "Fitness 🎳", description: "Popular"),
+                                        Categories(name: "Fun Stuff 🏀", description: "all about politics"),
+                                        Categories(name: "Enology ☄", description: "the world as we know it"),
+                                        Categories(name: "Earth 🌍", description: "Popular"),
+                                        Categories(name: "Sociology 👩🏼‍🔧", description: "engineering from all angles"),
+                                        Categories(name: "STEM 📚", description: "science tech engineering math"),
+                                        Categories(name: "Weather ☔", description: "the future?")]
+    
     let colorArray: [UIColor] = [UIColor(red:0.85, green:0.30, blue:0.30, alpha:1.0),
                                  UIColor(red:0.85, green:0.38, blue:0.30, alpha:1.0),
                                  UIColor(red:0.85, green:0.46, blue:0.30, alpha:1.0),

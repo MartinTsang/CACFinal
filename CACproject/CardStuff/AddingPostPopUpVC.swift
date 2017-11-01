@@ -42,7 +42,8 @@ class AddingPostPopUpVC: UIViewController /*ChromaColorPickerDelegate*/{
     var currentTitle:String = ""
     var currentContent:String = ""
     var currentCategory:String = ""
-    let array = ["Artificial Intelligence","Education","Policy","Mobile Applications","Relationships","Biotechnology","College Life"]
+    let categorytitles = CategoryTitles()
+    var categoryTitles = [Categories]()
     var categoryButton = UIButton()
     var categoryView = UITableView()
     var categoryEndEditingButton: UIButton!
@@ -53,7 +54,7 @@ class AddingPostPopUpVC: UIViewController /*ChromaColorPickerDelegate*/{
     var numberOfLastPost: String?
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        categoryTitles = categorytitles.categoryTitles
         ref = Database.database().reference()
         /*
         Auth.auth().signInAnonymously(completion: { (user: User?, error) in
@@ -403,12 +404,12 @@ extension AddingPostPopUpVC: UITableViewDelegate, UITableViewDataSource{
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return array.count
+        return categoryTitles.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.textLabel?.text = array[indexPath.row]
+        cell.textLabel?.text = categoryTitles[indexPath.row].name
         cell.textLabel?.adjustsFontSizeToFitWidth = true
         //cell.layer.cornerRadius = 10;
         //cell.backgroundColor = UIColor.white

@@ -83,20 +83,27 @@ class LikedVC: UIViewController {
     }
     
     @objc func reference(){
+        ("called")
+        self.frontCard?.cardView?.removeFromSuperview()
+        self.backCard?.cardView?.removeFromSuperview()
+        self.frontCard = nil
+        self.backCard = nil
+        self.indicatorNumber = 1
+        self.currentCardNumber = -1
         ref?.child("PostsData").observeSingleEvent(of: .value, with: {(snapshot) in
             if snapshot.childrenCount > 0{
                 self.likedList.removeAll()
+                self.likesCountlist.removeAll()
                 let defaults = UserDefaults.standard
-                //defaults.removeObject(forKey: "userLikedList")
                 var PostColor: UIColor?
                 let userLiked = defaults.object(forKey: "userLikedList") as? [String]
-                //print(userLiked)
+                print("userLiked: \(userLiked)")
                 if(userLiked != nil){
                     for liked in userLiked!{
                         for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
                             let postNum = Postsdata.key
                             if(postNum == liked){
-                                print(postNum)
+                                //print(postNum)
                                 let postObject = Postsdata.value as? [String: AnyObject]
                                 let cardCategory = postObject?["Category"]
                                 let cardTitle = postObject?["Title"]
@@ -104,38 +111,38 @@ class LikedVC: UIViewController {
                                 let ColorData = Postsdata.childSnapshot(forPath: "Color")
                                 if(ColorData.childrenCount > 0 && ColorData.key == "Color"){
                                     let color = ColorData.value as? [String: CGFloat]
-                                    print(ColorData.key)
+                                    //print(ColorData.key)
                                     let red = color?["red"]
                                     let green = color?["green"]
                                     let blue = color?["blue"]
                                     let alpha = color?["alpha"]
                                     PostColor = UIColor(red: (red)!, green: (green)!, blue: (blue)!, alpha: (alpha)!)
-                                }
                                     let post = CardsData(category: cardCategory as? String, title: cardTitle as? String, content: cardContent as? String, postNum: postNum, color: PostColor)
                                     self.likedList.append(post)
-                                    
-                                    self.ref?.child("Likes").observe(.value, with: {(snapshot) in
-                                        self.likesCountlist.removeAll()
-                                        for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
-                                            if(userLiked != nil){
-                                                for liked in userLiked!{
-                                                    for postsNumber in Postsdata.children.allObjects as! [DataSnapshot]{
-                                                        let postNum = postsNumber.key
-                                                        if(postNum == liked){
-                                                            let likes = postsNumber.value as? Int
-                                                            self.likesCountlist.append(likes!)
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        
-                                        self.initiateCards()
-                                    })
-                                
+                                }
                             }
                         }
-                    }}
+                    }
+                    self.ref?.child("Likes").observeSingleEvent(of: .value, with: {(snapshot) in
+                        //self.likesCountlist.removeAll()
+                        for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
+                            if(userLiked != nil){
+                                for liked in userLiked!{
+                                    for postsNumber in Postsdata.children.allObjects as! [DataSnapshot]{
+                                        let postNum = postsNumber.key
+                                        if(postNum == liked){
+                                            let likes = postsNumber.value as? Int
+                                            self.likesCountlist.append(likes!)
+                                            print("datalikeslist: \(self.likesCountlist)")
+                                            
+                                        }
+                                    }
+                                }
+                                self.initiateCards()
+                            }
+                        }
+                    })
+                }
             }
         })
     }
@@ -162,21 +169,21 @@ class LikedVC: UIViewController {
     }
     
     func initiateCards(){
-        if(self.frontCard == nil){
+        //if(self.frontCard == nil){
             if let card = self.createCard(Undo: false){
                 self.frontCard = card
                 self.view.addSubview(self.frontCard!.cardView!)
             }
-        }
+        //}
         
-        if(self.backCard == nil && likedList.count > 1){
+        if/*(self.backCard == nil &&*/( likedList.count > 1){
             if let card = self.createCard(Undo: false){
                 //print(card)
                 self.backCard = card
                 self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
             }
             
-        }else if  self.likedList.count == 1 && firstFetch == false{
+        }else if  self.likedList.count == 1{
             print("1 Card")
             self.backCard = self.frontCard
             self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
@@ -292,8 +299,8 @@ class LikedVC: UIViewController {
     private func addLikes(){
         likes = UILabel(frame: CGRect(x: 0, y: 0, width: cardView.frame.width*0.25, height: cardView.frame.height/15))
         if(likesCountlist.count > 0){
-            print(likedList)
-            print(currentCardNumber)
+            print("likedcountlist: \(likesCountlist)")
+            print("likedCurrentCardNum: \(currentCardNumber)")
         likes.text = "likes: \(likesCountlist[currentCardNumber])"
         }
         likes.numberOfLines = 1

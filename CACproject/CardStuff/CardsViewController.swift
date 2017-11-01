@@ -55,7 +55,13 @@ class CardsViewController: UIViewController{
     override func viewDidLoad() {
         //let pangesture = UIPanGestureRecognizer(target: cardView, action: #selector(self.swipingCard))
         super.viewDidLoad()
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: "userLikedList")
+        defaults.removeObject(forKey: "userPostList")
+        defaults.removeObject(forKey: "userCategoryList")
+        defaults.set(0, forKey: "viewedPosts")
         ref = Database.database().reference()
+        reference()
         unbrushplace = self.view.frame.height*3/2
         brushCenterX = view.center.x
         brushCenterY = view.center.y
@@ -64,62 +70,55 @@ class CardsViewController: UIViewController{
         addBrushEffect(brush: brush3, x: view.bounds.width/2 ,y: -view.bounds.height)
         addBrushEffect(brush: brush4, x: view.bounds.width*3/4 ,y: view.bounds.height*2)
         
-        ref?.child("PostsData").queryOrderedByKey().observe(.value, with: { (snapshot) in
-            if snapshot.childrenCount > 0{
-                //self.currentCardNumber = 0
-                self.postsList.removeAll()
-                var PostColor: UIColor?
-                for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
-                    let postNum = Postsdata.key
-                    if(Int(postNum)! > 0){
-                    let postObject = Postsdata.value as? [String: AnyObject]
-                    let cardCategory = postObject?["Category"]
-                    let cardTitle = postObject?["Title"]
-                    let cardContent = postObject?["Content"]
-                    self.ref?.child("PostsData").child(postNum).observeSingleEvent(of: .value, with: {(Colorsnapshot) in
-                        for ColorData in Colorsnapshot.children.allObjects as! [DataSnapshot]{
-                            if(Colorsnapshot.childrenCount > 0 && ColorData.key == "Color"){
-                                let color = ColorData.value as? [String: CGFloat]
-                                print(ColorData.key)
-                                let red = color?["red"]
-                                let green = color?["green"]
-                                let blue = color?["blue"]
-                                let alpha = color?["alpha"]
-                                PostColor = UIColor(red: (red)!, green: (green)!, blue: (blue)!, alpha: (alpha)!)
-                            }
-                        }
-                        let post = CardsData(category: cardCategory as? String, title: cardTitle as? String, content: cardContent as? String, postNum: postNum, color: PostColor)
-                        self.postsList.append(post)
-                        
-                        //self.postsList.reverse()
-                        if self.frontCard == nil {
-                            if let card = self.createCard(){
-                                self.frontCard = card
-                                self.view.addSubview((self.frontCard!.cardView)!)
-                            }else{
-                                self.frontCard = nil
-                            }
-                        }
-                        if self.backCard == nil {
-                            if let card = self.createCard(){
-                                self.backCard = card
-                                self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
-                            }else{
-                                self.backCard = nil
-                            }
-                        }
-                    })
-                        
-                    }
-                }
-               
-            }
-        })
+        
         
         NotificationCenter.default.addObserver(self, selector: #selector(CardsViewController.Unbrush), name:NSNotification.Name(rawValue: "NotificationID"), object: nil)
        addNavBar()
         
         addingButtons()
+    }
+    
+    func reference(){
+        ref?.child("PostsData").queryOrderedByKey().observe(.value, with: { (snapshot) in
+            self.postsList.removeAll()
+            self.currentCardNumber = 0
+            print(self.postsList)
+            if snapshot.childrenCount > 0{
+                let defaults = UserDefaults.standard
+                let viewedPosts = defaults.object(forKey: "viewedPosts") as! Int
+                print("viwed \(viewedPosts)")
+                //self.currentCardNumber = 0
+                var PostColor: UIColor?
+                for Postsdata in snapshot.children.allObjects as! [DataSnapshot]{
+                    let postNum = Postsdata.key
+                    
+                    print("\(postNum) >? \(viewedPosts)")
+                    if(Int(postNum)! > viewedPosts){
+                        let postObject = Postsdata.value as? [String: AnyObject]
+                        let cardCategory = postObject?["Category"]
+                        let cardTitle = postObject?["Title"]
+                        let cardContent = postObject?["Content"]
+                        let ColorData =  Postsdata.childSnapshot(forPath: "Color")
+                        if(ColorData.childrenCount > 0){
+                            let color = ColorData.value as? [String: CGFloat]
+                            //print(postNum)
+                            let red = color?["red"]
+                            let green = color?["green"]
+                            let blue = color?["blue"]
+                            let alpha = color?["alpha"]
+                            PostColor = UIColor(red: (red)!, green: (green)!, blue: (blue)!, alpha: (alpha)!)
+                            let post = CardsData(category: cardCategory as? String, title: cardTitle as? String, content: cardContent as? String, postNum: postNum, color: PostColor)
+                            self.postsList.append(post)
+                            
+                            //print("PostListColor: \(self.postsList[self.currentCardNumber].color)")
+                            self.initiateCard()
+                        }
+                    }
+                    
+                }
+                
+            }
+        })
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -131,13 +130,17 @@ class CardsViewController: UIViewController{
             let cardView = SwipableCardView(frame: CardFrame())
             cardView.delegate = self
             cardView.selection = true
-            print("hi" + "\(postsList[currentCardNumber].color)")
+            //print("hi" + "currentCard: \(currentCardNumber)" + "postNum: \(postsList[currentCardNumber].postNum) " + "\(postsList[currentCardNumber].color)")
             cardView.card.backgroundColor =  postsList[currentCardNumber].color
             cardView.layer.cornerRadius = cardView.frame.width*0.05
             cardView.cardTexts.text = postsList[currentCardNumber].content
             cardView.cardCategory.text = postsList[currentCardNumber].category
             cardView.cardTitle.text = postsList[currentCardNumber].title
             let postNum = postsList[currentCardNumber].postNum
+            print("currentCardNum: \(currentCardNumber)")
+            print("currentCardTitle: \(postsList[currentCardNumber].title)")
+            print("DataColor: \(postsList[currentCardNumber].color)")
+            print("cardColor: \(cardView.card.backgroundColor?.components)")
             currentCardNumber += 1
             return Card(cardView: cardView, postNum: postNum)
         }else {
@@ -145,6 +148,32 @@ class CardsViewController: UIViewController{
         }
     }
     
+    func initiateCard(){
+            if self.frontCard == nil{
+                if let card = self.createCard(){
+                    //print(card.postNum)
+                    print("frontCardOriginal: \(self.frontCard?.postNum)")
+                    self.frontCard = card
+                    print("frontCardAfter: \(self.frontCard?.postNum)")
+                    self.view.addSubview((self.frontCard!.cardView)!)
+                }else{
+                    self.frontCard = nil
+                }
+            }else{
+                self.currentCardNumber = 1
+            }
+                
+            if self.backCard == nil{
+                if let card = self.createCard(){
+                    print("backCardOriginal: \(self.backCard?.postNum)")
+                    self.backCard = card
+                    print("backCardAfter: \(self.backCard?.postNum)")
+                    self.view.insertSubview(self.backCard!.cardView!, belowSubview: self.frontCard!.cardView!)
+                }
+            }else{
+                self.currentCardNumber = 2
+        }
+    }
     
     
     private func CardFrame() -> CGRect {
@@ -166,23 +195,6 @@ class CardsViewController: UIViewController{
         addingDislikeButton()
         addingaddPostButton()
         //addingResetButton()
-    }
-    
-    func addingTestButton(){
-        testButton.setTitle("->", for: .normal)
-        testButton.setTitleColor(UIColor.white, for: .normal)
-        testButton.backgroundColor=UIColor.clear
-        testButton.frame = CGRect(x: 10, y: 10, width: 20, height: 20)
-        view.addSubview(testButton)
-        testButton.titleLabel?.font = UIFont.systemFont(ofSize: topBar.frame.height/2, weight: UIFont.Weight.regular)
-        testButton.addTarget(self, action:  #selector(test(_:)), for: .touchUpInside)
-    }
-    
-    @objc func test(_ sender: UIButton){
-        print("clicked")
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let vc = storyboard.instantiateViewController(withIdentifier: "LikedVC") as! LikedVC
-        self.present(vc, animated: true, completion: nil)
     }
     
     func addNavBar(){
@@ -376,6 +388,7 @@ extension CardsViewController: SwipableCardViewDelegate {
         }
         
         switchCards()
+            addViewed()
     }
     }
     
@@ -396,7 +409,6 @@ extension CardsViewController: SwipableCardViewDelegate {
                 let userPostList = [frontCard.postNum]
                 defaults.set(userPostList, forKey: "userLikedList")
             }
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "liked"), object: nil)
             ref?.child("Likes").child((frontCard.cardView?.cardCategory.text)!).observeSingleEvent(of: .value, with: {(snapshot) in
                 //print(frontCard.postNum!)
                 for PostsData in snapshot.children.allObjects as! [DataSnapshot]{
@@ -405,11 +417,24 @@ extension CardsViewController: SwipableCardViewDelegate {
                         let likesCount = PostsData.value as? Int
                         //print(likesCount)
                         self.ref?.child("Likes").child((frontCard.cardView?.cardCategory.text)!).child(frontCard.postNum!).setValue(likesCount! + 1)
+                        
+                        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "liked"), object: nil)
                     }}
                 self.switchCards()
+                self.addViewed()
             })
         }
     }
+    }
+    
+    func addViewed(){
+        let defaults = UserDefaults.standard
+        if let viewed = defaults.object(forKey: "viewedPosts") as? Int{
+            
+            defaults.set(viewed + 1, forKey: "viewedPosts")
+        }else{
+            defaults.set(1, forKey: "viewedPosts")
+        }
     }
     
 }

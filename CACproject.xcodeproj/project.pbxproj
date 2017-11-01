@@ -34,6 +34,7 @@
 		6EC272511FA50B0800ABF18C /* SimpleAlert.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6EC272521FA50B0800ABF18C /* SimpleAlert.framework */; };
 		6EFD0FEF1F9E61AF0094BFEE /* IntermediateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EFD0FEE1F9E61AF0094BFEE /* IntermediateViewController.swift */; };
 		8CDF10E6B45113379F70148E /* Pods_CACprojectTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65B1812A0FCC249E212A6BBC /* Pods_CACprojectTests.framework */; };
+		CE6128DA1FA8626100B8EDAA /* TopChartTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE6128D91FA8626100B8EDAA /* TopChartTableView.swift */; };
 		CE9A5F5C1FA6F61600D6B181 /* CardsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE9A5F561FA6F03300D6B181 /* CardsViewController.swift */; };
 		CE9A5F5D1FA6F61600D6B181 /* CardsData.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE9A5F551FA6F03300D6B181 /* CardsData.swift */; };
 		CE9A5F5E1FA6F61600D6B181 /* ExpandInfoVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE9A5F591FA6F03400D6B181 /* ExpandInfoVC.swift */; };
@@ -102,6 +103,7 @@
 		6EFD0FEE1F9E61AF0094BFEE /* IntermediateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntermediateViewController.swift; sourceTree = "<group>"; };
 		8C6437D510991B96349ED790 /* Pods_CACprojectUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CACprojectUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B94105FF5DE09DFBA49C8A64 /* Pods-CACproject.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CACproject.release.xcconfig"; path = "Pods/Target Support Files/Pods-CACproject/Pods-CACproject.release.xcconfig"; sourceTree = "<group>"; };
+		CE6128D91FA8626100B8EDAA /* TopChartTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopChartTableView.swift; sourceTree = "<group>"; };
 		CE9A5F511FA6F03300D6B181 /* LikedVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LikedVC.swift; sourceTree = "<group>"; };
 		CE9A5F521FA6F03300D6B181 /* SwipableCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipableCardView.swift; sourceTree = "<group>"; };
 		CE9A5F531FA6F03300D6B181 /* UIButtonAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIButtonAnimation.swift; sourceTree = "<group>"; };
@@ -289,6 +291,7 @@
 				CE9A5F521FA6F03300D6B181 /* SwipableCardView.swift */,
 				CE9A5F5A1FA6F03400D6B181 /* TopChartVC.swift */,
 				CE9A5F531FA6F03300D6B181 /* UIButtonAnimation.swift */,
+				CE6128D91FA8626100B8EDAA /* TopChartTableView.swift */,
 			);
 			path = CardStuff;
 			sourceTree = "<group>";
@@ -642,6 +645,7 @@
 				CE9A5F5D1FA6F61600D6B181 /* CardsData.swift in Sources */,
 				6EC2724E1FA46A1C00ABF18C /* footerViewClass.swift in Sources */,
 				6EFD0FEF1F9E61AF0094BFEE /* IntermediateViewController.swift in Sources */,
+				CE6128DA1FA8626100B8EDAA /* TopChartTableView.swift in Sources */,
 				6E9AF8EF1F97F4CA00F62A00 /* roundTableViewCell.swift in Sources */,
 				CE9A5F621FA6F61600D6B181 /* TopChartVC.swift in Sources */,
 				CE9A5F5E1FA6F61600D6B181 /* ExpandInfoVC.swift in Sources */,
