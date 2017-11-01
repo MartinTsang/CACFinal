@@ -82,9 +82,23 @@ class AddingPostPopUpVC: UIViewController /*ChromaColorPickerDelegate*/{
             //print("dataBasenum : \(self.numOfPosts)")
         })
         
-        topBar = UIView(frame:   CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height*0.1))
-        topBar.backgroundColor = UIColor.lightGray
+        topBar = UIView(frame: CGRect(x: -2, y: -2, width: view.frame.width + 4, height: view.frame.height*0.1 + 2))
+        topBar.backgroundColor = UIColor.clear
+        topBar.layer.borderColor = UIColor.black.cgColor
+        topBar.layer.borderWidth = 0.5
         view.addSubview(topBar)
+        let navBarTitle = UILabel()
+        navBarTitle.text = "New Post"
+        topBar.addSubview(navBarTitle)
+        navBarTitle.backgroundColor = .clear
+        navBarTitle.textAlignment = .center
+        navBarTitle.font = UIFont.systemFont(ofSize: topBar.frame.height/4, weight: UIFont.Weight.semibold)
+        navBarTitle.translatesAutoresizingMaskIntoConstraints = false
+        let leftConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .left, relatedBy: .equal, toItem: topBar, attribute: .left, multiplier: 1, constant: view.frame.width/2-topBar.frame.height/1)
+        let rightConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .right, relatedBy: .equal, toItem: topBar, attribute: .right, multiplier: 1, constant: -view.frame.width/2+topBar.frame.height/1)
+        let topConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .top, relatedBy: .equal, toItem: topBar, attribute: .top, multiplier: 1, constant: topBar.frame.height/4+8)
+        let bottomConstraints = NSLayoutConstraint(item: navBarTitle, attribute: .bottom, relatedBy: .equal, toItem: topBar, attribute: .bottom, multiplier: 1, constant: -topBar.frame.height/4+10)
+        topBar.addConstraints([leftConstraints,rightConstraints,topConstraints,bottomConstraints])
         
         addChangColorButton()
         
@@ -212,7 +226,8 @@ class AddingPostPopUpVC: UIViewController /*ChromaColorPickerDelegate*/{
     
     func addButton(button: UIButton, text: String, left: CGFloat, right: CGFloat, top: CGFloat, bot: CGFloat){
         button.setTitle(text, for: .normal)
-        button.setTitleColor(UIColor.white, for: .normal)
+        button.setTitleColor(UIColor.black, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: topBar.frame.height/4, weight: UIFont.Weight.thin)
         button.backgroundColor=UIColor.clear
         topBar.addSubview(button)
         
